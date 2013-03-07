@@ -43,6 +43,7 @@ static VALUE parse_line(VALUE self, VALUE str, VALUE sep)
     for (i = 0; i < len; i++)
     {
         c = ptr[i];
+        /* if separator */
         if(c == sepc[0])
         {
                 if (state == UNQUOTED) {
@@ -57,6 +58,7 @@ static VALUE parse_line(VALUE self, VALUE str, VALUE sep)
                     index = 0;
                     state = UNQUOTED;
                 }
+        /* if encounter a quote */
         } else if (c == '"') {
                 if (state == UNQUOTED) {
                     state = IN_QUOTED;
@@ -68,6 +70,7 @@ static VALUE parse_line(VALUE self, VALUE str, VALUE sep)
                     value[index++] = c;  /* escaped quote */
                     state = IN_QUOTED;
                 }
+        /* if encounter a line break */ 
         } else if (c == 13 || c == 10) {
                 if (state == IN_QUOTED) {
                     value[index++] = c;
@@ -75,6 +78,7 @@ static VALUE parse_line(VALUE self, VALUE str, VALUE sep)
                 else {
                     i = len;  /* only parse first line if multiline */
                 }
+        /* not a special character */
         } else {
                 value[index++] = c;
         }

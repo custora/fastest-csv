@@ -21,8 +21,9 @@ static VALUE cFastestCSV;
 */
 static VALUE mCsvParser;
 
-static VALUE parse_line(VALUE self, VALUE str)
+static VALUE parse_line(VALUE self, VALUE str, VALUE sep)
 {
+    const char *sepc = RSTRING_PTR(sep);
     if (NIL_P(str))
         return Qnil;
     
@@ -38,12 +39,12 @@ static VALUE parse_line(VALUE self, VALUE str)
     int index = 0;
     int i;
     char c;
+
     for (i = 0; i < len; i++)
     {
         c = ptr[i];
-        switch (c)
+        if(c == sepc[0])
         {
-            case ',':
                 if (state == UNQUOTED) {
                     rb_ary_push(array, (index == 0 ? Qnil: rb_str_new(value, index)));
                     index = 0;
@@ -56,8 +57,7 @@ static VALUE parse_line(VALUE self, VALUE str)
                     index = 0;
                     state = UNQUOTED;
                 }
-                break;
-            case '"':
+        } else if (c == '"') {
                 if (state == UNQUOTED) {
                     state = IN_QUOTED;
                 }
@@ -68,17 +68,14 @@ static VALUE parse_line(VALUE self, VALUE str)
                     value[index++] = c;  /* escaped quote */
                     state = IN_QUOTED;
                 }
-                break;
-            case 13:  /* \r */
-            case 10:  /* \n */
+        } else if (c == 13 || c == 10) {
                 if (state == IN_QUOTED) {
                     value[index++] = c;
                 }
                 else {
                     i = len;  /* only parse first line if multiline */
                 }
-                break;
-            default:
+        } else {
                 value[index++] = c;
         }
     }
@@ -99,5 +96,5 @@ void Init_csv_parser()
     rb_define_singleton_method(cFastestCSV, "parse_line", parse_line, 1);
     */
     mCsvParser = rb_define_module("CsvParser");
-    rb_define_module_function(mCsvParser, "parse_line", parse_line, 1);
+    rb_define_module_function(mCsvParser, "parse_line", parse_line, 2);
 }

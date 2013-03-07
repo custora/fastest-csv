@@ -12,15 +12,17 @@ class FastestCSV
   end
 
   # Pass each line of the specified +path+ as array to the provided +block+
-  def self.foreach(path, &block)
-    open(path) do |reader|
+  def self.foreach(path, opts, &block)
+    open(path, "rb", opts) do |reader|
       reader.each(&block)
     end
   end
 
   # Opens a csv file. Pass a FastestCSV instance to the provided block,
   # or return it when no block is provided
-  def self.open(path, mode = "rb")
+  def self.open(path, mode = "rb", opts = {col_sep: ",", line_break: "\n"})
+    @@separator = opts[:col_sep]
+    @@line_break = opts[:line_break] == "\r\n" ? "\n" : opts[:line_break]
     csv = new(File.open(path, mode))
     if block_given?
       begin
@@ -57,8 +59,8 @@ class FastestCSV
     end
   end
   
-  def self.parse_line(line)
-    ::CsvParser.parse_line(line)
+  def self.parse_line(line, _sep)
+    ::CsvParser.parse_line(line, @@separator)
   end
 
   # Create new FastestCSV wrapping the specified IO object
@@ -84,7 +86,7 @@ class FastestCSV
   # Read next line from the wrapped IO and return as array or nil at EOF
   def shift
     if line = @io.gets
-      ::CsvParser.parse_line(line)
+      ::CsvParser.parse_line(line, @@separator)
     else
       nil
     end
@@ -105,7 +107,7 @@ end
 class String
   # Equivalent to <tt>FasterCSV::parse_line(self)</tt>
   def parse_csv
-    ::CsvParser.parse_line(self)
+    ::CsvParser.parse_line(self, @@separator)
   end
 end
 

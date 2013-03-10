@@ -91,8 +91,7 @@ class FastestCSV
         ::CsvParser.parse_line(line, @@separator)
       else
         while(quote_count % 2 != 0)
-          new_line = @io.gets
-          break unless new_line
+          break unless new_line = @io.gets
           line << new_line
           quote_count = line.count("\"")
         end

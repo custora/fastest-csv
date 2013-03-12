@@ -5,7 +5,7 @@ require 'stringio'
 
 # Fast CSV parser using native code
 class FastestCSV
-  DEFAULT_WRITE_BUFFER_LINES = 5_000_000
+  DEFAULT_WRITE_BUFFER_LINES = 1_000_000
   
   #if RUBY_PLATFORM =~ /java/
   #  require 'jruby'

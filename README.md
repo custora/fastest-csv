@@ -1,20 +1,20 @@
 # FastestCSV
 
-Fastest CSV class for MRI Ruby and JRuby. Faster than faster_csv and fasterer-csv. 
+Fastest CSV class for MRI Ruby. Faster than faster_csv and fasterer-csv. On par with csvscan, but supports any delimiter and fast ((buffered) writing of CSVs.
 
-Uses native C code to parse CSV lines in MRI Ruby and Java in JRuby.
+Uses native C code to parse CSV lines in MRI Ruby.
 
 Supports standard CSV according to RFC4180. Not the so-called "csv" from Excel.
 
-The interface is a subset of the CSV interface in Ruby 1.9.3. The options parameter is not supported.
+The interface is a subset of the CSV interface in Ruby 1.9.3. The options parameter only accepts col_sep and write_buffer_lines.
 
-Originally developed to parse large CSV log files from PowerMTA.
+Originally developed to parse large CSV log files from PowerMTA.  Extended to parse large log files at Custora (that were not always comma delimited)
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
-    gem 'fastest-csv'
+    gem 'fastest-csv', git: 'git://github.com/pospischil/fastest-csv.git'
 
 And then execute:
 
@@ -58,6 +58,12 @@ Parse file in array of arrays
 Parse string in array of arrays
 
     rows = FastestCSV.parse(csv_data)
+
+Write array to CSV
+
+    FastestCSV.open("path/to/file.csv", "wb") do |csv|
+      csv << ["1", "2", "3"]
+    end
 
 ## Contributing
 

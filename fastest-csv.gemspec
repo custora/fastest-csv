@@ -2,11 +2,11 @@
 require File.expand_path('../lib/fastest-csv/version', __FILE__)
 
 Gem::Specification.new do |gem|
-  gem.authors       = ["Maarten Oelering"]
-  gem.email         = ["maarten@brightcode.nl"]
-  gem.description   = %q{Fastest standard CSV parser for MRI Ruby and JRuby}
-  gem.summary       = %q{Fastest standard CSV parser for MRI Ruby and JRuby}
-  gem.homepage      = "https://github.com/brightcode/fastest-csv"
+  gem.authors       = ["Maarten Oelering", "Jon Pospischil"]
+  gem.email         = ["maarten@brightcode.nl", "pospischil@gmail.com"]
+  gem.description   = %q{Fastest standard CSV parser for MRI Ruby}
+  gem.summary       = %q{Fastest standard CSV parser for MRI Ruby}
+  gem.homepage      = "https://github.com/pospischil/fastest-csv"
 
   gem.files         = `git ls-files`.split($\)
   #gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
@@ -15,12 +15,7 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
   gem.version       = FastestCSV::VERSION
 
-  if RUBY_PLATFORM =~ /java/
-    gem.platform = "java"
-    gem.files << "lib/csv_parser.jar"
-  else
-    gem.extensions  = ['ext/csv_parser/extconf.rb']
-  end
+  gem.extensions  = ['ext/csv_parser/extconf.rb']
   
   gem.add_development_dependency "rake-compiler"
 end

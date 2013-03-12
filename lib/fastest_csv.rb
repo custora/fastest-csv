@@ -5,11 +5,12 @@ require 'stringio'
 
 # Fast CSV parser using native code
 class FastestCSV
+  DEFAULT_WRITE_BUFFER_LINES = 5_000_000
   
-  if RUBY_PLATFORM =~ /java/
-    require 'jruby'
-    org.brightcode.CsvParserService.new.basicLoad(JRuby.runtime)
-  end
+  #if RUBY_PLATFORM =~ /java/
+  #  require 'jruby'
+  #  org.brightcode.CsvParserService.new.basicLoad(JRuby.runtime)
+  #end
 
   # Pass each line of the specified +path+ as array to the provided +block+
   def self.foreach(path, opts, &block)
@@ -20,9 +21,9 @@ class FastestCSV
 
   # Opens a csv file. Pass a FastestCSV instance to the provided block,
   # or return it when no block is provided
-  def self.open(path, mode = "rb", opts = {col_sep: ",", line_break: "\n"})
+  def self.open(path, mode = "rb", opts = {col_sep: ",", write_buffer_lines: DEFAULT_WRITE_BUFFER_LINES})
     @@separator = opts[:col_sep]
-    @@line_break = opts[:line_break] == "\r\n" ? "\n" : opts[:line_break]
+    @@write_buffer_lines = opts[:write_buffer_lines]
     csv = new(File.open(path, mode))
     if block_given?
       begin
@@ -66,6 +67,8 @@ class FastestCSV
   # Create new FastestCSV wrapping the specified IO object
   def initialize(io)
     @io = io
+    @current_buffer_count = 0
+    @current_write_buffer = ""
   end
   
   # Read from the wrapped IO passing each line as array to the specified block
@@ -103,9 +106,23 @@ class FastestCSV
   end
   alias_method :gets,     :shift
   alias_method :readline, :shift
+
+  def <<(_array)
+    @current_buffer_count += 1
+    @current_write_buffer << to_csv(_array)
+    if(@current_buffer_count == @@write_buffer_lines)
+      # TODO: would write_nonblock help?
+      @io.write(@current_write_buffer)
+    end
+  end
+
+  def to_csv(_array)
+    "#{_array.map{|x| x ? "\"#{x.gsub("\"", "\"\"")}\"" : ""}.join(@@separator)}\n"
+  end
   
   # Close the wrapped IO
   def close
+    @io.write(@current_write_buffer) unless @current_write_buffer == ""
     @io.close
   end
   

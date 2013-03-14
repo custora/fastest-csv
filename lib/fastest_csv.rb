@@ -113,11 +113,12 @@ class FastestCSV
     if(@current_buffer_count == @@write_buffer_lines)
       # TODO: would write_nonblock help?
       @io.write(@current_write_buffer)
+      @current_write_buffer = ""
+      @current_buffer_count = 0
     end
   end
-
   def to_csv(_array)
-    "#{_array.map{|x| x ? "\"#{x.gsub("\"", "\"\"")}\"" : ""}.join(@@separator)}\n"
+    "#{_array.map{|x| x ? "\"#{x.to_s.gsub("\"", "\"\"")}\"" : ""}.join(@@separator)}\n"
   end
   
   # Close the wrapped IO

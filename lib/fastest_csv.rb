@@ -94,13 +94,15 @@ class FastestCSV
 
   # Read next line from the wrapped IO and return as array or nil at EOF
   def shift
-    if line = @io.gets.encode!(@@encoding, invalid: :replace, undef: :replace, replace: ' ')
+    if line = @io.gets
+      line.encode!(@@encoding, invalid: :replace, undef: :replace, replace: ' ')
       quote_count = line.count("\"")
       if(quote_count % 2 == 0)
         ::CsvParser.parse_line(line, @@separator)
       else
         while(quote_count % 2 != 0)
-          break unless new_line = @io.gets.encode!(@@encoding, invalid: :replace, undef: :replace, replace: ' ')
+          break unless new_line = @io.gets
+          new_line.encode!(@@encoding, invalid: :replace, undef: :replace, replace: ' ')
           line << new_line
           quote_count = line.count("\"")
         end

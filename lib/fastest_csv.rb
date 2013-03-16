@@ -6,7 +6,6 @@ require 'stringio'
 # Fast CSV parser using native code
 class FastestCSV
   DEFAULT_WRITE_BUFFER_LINES = 1_000_000
-  DEFAULT_ENCODING = "UTF-8"
 
   def self.version
     VERSION
@@ -26,10 +25,9 @@ class FastestCSV
 
   # Opens a csv file. Pass a FastestCSV instance to the provided block,
   # or return it when no block is provided
-  def self.open(path, mode = "rb", opts = {col_sep: ",", write_buffer_lines: DEFAULT_WRITE_BUFFER_LINES, encoding: DEFAULT_ENCODING})
+  def self.open(path, mode = "rb", opts = {col_sep: ",", write_buffer_lines: DEFAULT_WRITE_BUFFER_LINES})
     @@separator = opts[:col_sep]
     @@write_buffer_lines = opts[:write_buffer_lines]
-    @@encoding = opts[:encoding]
     csv = new(File.open(path, mode))
     if block_given?
       begin
@@ -95,14 +93,12 @@ class FastestCSV
   # Read next line from the wrapped IO and return as array or nil at EOF
   def shift
     if line = @io.gets
-      line.encode!(@@encoding, invalid: :replace, undef: :replace, replace: ' ')
       quote_count = line.count("\"")
       if(quote_count % 2 == 0)
         ::CsvParser.parse_line(line, @@separator)
       else
         while(quote_count % 2 != 0)
           break unless new_line = @io.gets
-          new_line.encode!(@@encoding, invalid: :replace, undef: :replace, replace: ' ')
           line << new_line
           quote_count = line.count("\"")
         end

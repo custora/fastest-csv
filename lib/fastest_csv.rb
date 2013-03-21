@@ -25,7 +25,8 @@ class FastestCSV
 
   # Opens a csv file. Pass a FastestCSV instance to the provided block,
   # or return it when no block is provided
-  def self.open(path, mode = "rb", opts = {col_sep: ",", write_buffer_lines: DEFAULT_WRITE_BUFFER_LINES})
+  def self.open(path, mode = "rb", _opts = {})
+    opts = {col_sep: ",", write_buffer_lines: DEFAULT_WRITE_BUFFER_LINES}.merge(_opts)
     @@separator = opts[:col_sep]
     @@write_buffer_lines = opts[:write_buffer_lines]
     csv = new(File.open(path, mode))

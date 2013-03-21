@@ -23,22 +23,27 @@ static VALUE mCsvParser;
 
 static VALUE parse_line(VALUE self, VALUE str, VALUE sep)
 {
+    printf("parse_line:26");
     const char *sepc = RSTRING_PTR(sep);
     if (NIL_P(str))
         return Qnil;
     
     const char *ptr = RSTRING_PTR(str);
     int len = (int) RSTRING_LEN(str);  /* cast to prevent warning in 64-bit OS */
+    printf("parse_line:33");
 
     if (len == 0)
         return Qnil;
-    
+
+    printf("parse_line:38");
+
     VALUE array = rb_ary_new2(DEF_ARRAY_LEN); 
     char value[len];  /* field value, no longer than line */
     int state = 0;
     int index = 0;
     int i;
     char c;
+    printf("parse_line:46");
 
     for (i = 0; i < len; i++)
     {
@@ -83,6 +88,7 @@ static VALUE parse_line(VALUE self, VALUE str, VALUE sep)
                 value[index++] = c;
         }
     }
+    printf("parse_line:91");
     
     if (state == UNQUOTED) {
         rb_ary_push(array, (index == 0 ? Qnil: rb_str_new(value, index)));
@@ -90,6 +96,7 @@ static VALUE parse_line(VALUE self, VALUE str, VALUE sep)
     else if (state == QUOTE_IN_QUOTED) {
         rb_ary_push(array, rb_str_new(value, index));
     }
+    printf("parse_line:99");
     return array;
 }
 

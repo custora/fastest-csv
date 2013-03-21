@@ -65,7 +65,7 @@ class FastestCSV
   end
   
   def self.parse_line(line, _sep)
-    ::CsvParser.parse_line(line, @@separator)
+    CsvParser.parse_line(line, @@separator)
   end
 
   # Create new FastestCSV wrapping the specified IO object
@@ -95,14 +95,14 @@ class FastestCSV
     if line = @io.gets
       quote_count = line.count("\"")
       if(quote_count % 2 == 0)
-        ::CsvParser.parse_line(line, @@separator)
+        CsvParser.parse_line(line, @@separator)
       else
         while(quote_count % 2 != 0)
           break unless new_line = @io.gets
           line << new_line
           quote_count = line.count("\"")
         end
-        ::CsvParser.parse_line(line, @@separator)
+        CsvParser.parse_line(line, @@separator)
       end
     else
       nil
@@ -139,7 +139,7 @@ end
 class String
   # Equivalent to <tt>FasterCSV::parse_line(self)</tt>
   def parse_csv
-    ::CsvParser.parse_line(self, @@separator)
+    CsvParser.parse_line(self, @@separator)
   end
 end
 

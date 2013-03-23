@@ -5,7 +5,7 @@ require 'stringio'
 
 # Fast CSV parser using native code
 class FastestCSV
-  DEFAULT_WRITE_BUFFER_LINES = 1_000_000
+  DEFAULT_WRITE_BUFFER_LINES = 250_000
 
   def self.version
     VERSION

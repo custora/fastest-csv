@@ -123,7 +123,7 @@ class FastestCSV
     end
   end
   def to_csv(_array)
-    "#{_array.map{|x| x ? "\"#{x.to_s.gsub("\"", "\"\"")}\"" : "\"\""}.join(",")}\n"
+    "#{_array.map{|x| x ? "\"#{x.to_s.gsub("\"", "\"\"").gsub("\\", "\\\\\\\\")}\"" : "\"\""}.join(",")}\n"
   end
   
   # Close the wrapped IO

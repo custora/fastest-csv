@@ -122,7 +122,6 @@ class FastestCSV
       @current_buffer_count = 0
     end
   end
-  x.gsub(/[^\\]\\\"/, "\\\\\\\\\"")
 
   def to_csv(_array)
     # wrap all fields in quotes

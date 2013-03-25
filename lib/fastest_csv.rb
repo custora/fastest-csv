@@ -122,8 +122,27 @@ class FastestCSV
       @current_buffer_count = 0
     end
   end
+  x.gsub(/[^\\]\\\"/, "\\\\\\\\\"")
+
   def to_csv(_array)
-    "#{_array.map{|x| x ? "\"#{x.to_s.gsub("\"", "\"\"")}\"".gsub("\\\"", "\\\\\\\\\"") : "\"\""}.join(",")}\n"
+    # wrap all fields in quotes
+    # replace any \ with \\ (provided the \ isn't already escaped like \\)
+    # replace any " with ""
+    #x.to_s.gsub(/((\"(\"\")+)|(([^\"]|^)\"([^\"]|$)))/, "\1\"").gsub(/((\\(\\\\)+)|(([^\\]|^)\\([^\\]|$)))/, "\1\\")
+    #x.to_s.gsub(/((\"(\"\")+))/, "\1\"\"").gsub(/(\\(\\\\)*)/, "\1\\")
+
+    "#{_array.map{|x| x ? "\"#{clean_end(x)}\"" : "\"\"" }.join(",")}\n"
+
+    "#{_array.map{|x| x ? "\"#{x.to_s.gsub(/([^\\]|^)\\\"/, "\1\\\\\\\\\"").gsub(/([^"]|^)\"/, "\1\"\"")} : "\"\""}.join(",")}\n"
+  end
+
+  def clean_end(_str)
+    str = _str.to_s
+    if(str.ends_with?("\\") && !str.ends_with?("\\\\"))
+      "#{str}\\"
+    else
+      str
+    end
   end
   
   # Close the wrapped IO

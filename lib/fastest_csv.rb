@@ -130,13 +130,15 @@ class FastestCSV
     #x.to_s.gsub(/((\"(\"\")+)|(([^\"]|^)\"([^\"]|$)))/, "\1\"").gsub(/((\\(\\\\)+)|(([^\\]|^)\\([^\\]|$)))/, "\1\\")
     #x.to_s.gsub(/((\"(\"\")+))/, "\1\"\"").gsub(/(\\(\\\\)*)/, "\1\\")
 
+    #.map{|x| x.to_s.encode!("UTF-8", invalid: :replace, undef: :replace, replace: ' ')}
+
 
     #{}"#{_array.map{|x| x ? "\"#{x.to_s.gsub(/([^\\]|^)\\\"/, "\1\\\\\\\\\"").gsub(/([^"]|^)\"/, "\1\"\"")} : "\"\""}.join(",")}\n"
     "#{_array.map{|x| x ? "\"#{clean_end(x).gsub("\"", "\"\"")}\"" : "\"\"" }.join(",")}\n"
   end
 
   def clean_end(_str)
-    str = _str.to_s
+    str = _str.to_s.encode!("UTF-8", invalid: :replace, undef: :replace, replace: ' ')
     if(str.ends_with?("\\") && !str.ends_with?("\\\\"))
       "#{str}\\"
     else

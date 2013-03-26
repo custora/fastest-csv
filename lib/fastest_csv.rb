@@ -142,7 +142,7 @@ class FastestCSV
     if(str.ends_with?("\\") && !str.ends_with?("\\\\"))
       "#{str}\\"
     else
-      str
+      str.strip
     end
   end
   

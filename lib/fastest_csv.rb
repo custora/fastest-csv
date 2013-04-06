@@ -97,7 +97,6 @@ class FastestCSV
     if line = @io.gets(@@linebreak)
       quote_count = line.count("\"")
       if(quote_count % 2 == 0)
-        puts line
         CsvParser.parse_line(line, @@separator)
       else
         while(quote_count % 2 != 0)
@@ -105,7 +104,6 @@ class FastestCSV
           line << new_line
           quote_count = line.count("\"")
         end
-        puts line
         CsvParser.parse_line(line, @@separator)
       end
     else

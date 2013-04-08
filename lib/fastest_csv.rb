@@ -143,7 +143,8 @@ class FastestCSV
 
     "#{_array.map do |z|
       if(z && z.to_s.index(/,|\"|\\/))
-        "\"#{z.to_s.encode!("UTF-8", invalid: :replace, undef: :replace, replace: ' ').gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4')}\""
+        # we do the gsub twice
+        "\"#{z.to_s.encode!("UTF-8", invalid: :replace, undef: :replace, replace: ' ').gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4')}\""
       else
         z
       end

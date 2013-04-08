@@ -127,7 +127,10 @@ class FastestCSV
   def to_csv(_array)
     # wrap all fields in quotes
     # replace any \ with \\ (provided the \ isn't already escaped like \\)
+    #x.to_s.gsub(/([^\\])(\\(\\\\)+)([^\\])/, '\1\2\\\\\4')
+
     # replace any " with ""
+    #x.to_s.gsub(/([^\"])(\"(\"\")+)([^\"])/, '\1\2\\\"\4')
     #x.to_s.gsub(/((\"(\"\")+)|(([^\"]|^)\"([^\"]|$)))/, "\1\"").gsub(/((\\(\\\\)+)|(([^\\]|^)\\([^\\]|$)))/, "\1\\")
     #x.to_s.gsub(/((\"(\"\")+))/, "\1\"\"").gsub(/(\\(\\\\)*)/, "\1\\")
 
@@ -135,7 +138,16 @@ class FastestCSV
 
 
     #{}"#{_array.map{|x| x ? "\"#{x.to_s.gsub(/([^\\]|^)\\\"/, "\1\\\\\\\\\"").gsub(/([^"]|^)\"/, "\1\"\"")} : "\"\""}.join(",")}\n"
-    "#{_array.map{|x| x ? "\"#{clean_end(x).gsub("\"", "\"\"")}\"" : "\"\"" }.join(",")}\n"
+    # PREVIOUS GOOD ONE:
+    #{}"#{_array.map{|x| x ? "\"#{clean_end(x).gsub("\"", "\"\"")}\"" : "\"\"" }.join(",")}\n"
+
+    "#{_array.map do |z|
+      if(z && z.to_s.index(/,|\"|\\/))
+        "\"#{z.to_s.encode!("UTF-8", invalid: :replace, undef: :replace, replace: ' ').gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4')}}\""
+      else
+        z
+      end
+    end.join(",")}\n"
   end
 
   def clean_end(_str)

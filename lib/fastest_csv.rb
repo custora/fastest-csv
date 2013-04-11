@@ -142,7 +142,7 @@ class FastestCSV
     #{}"#{_array.map{|x| x ? "\"#{clean_end(x).gsub("\"", "\"\"")}\"" : "\"\"" }.join(",")}\n"
 
     "#{_array.map do |z|
-      if(z && z.to_s.index(/,|\"|\\/))
+      if(z && z.to_s.index(/,|\"|\\|\n|\r/))
         # we do the gsub twice in case there is a single character separating the escaped chars, e.g.:
         # "R", which would not have the second quote escaped
         # because the R will have matched the first match and then cant be used to make the second match

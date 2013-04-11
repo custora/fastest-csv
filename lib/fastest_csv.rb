@@ -146,9 +146,9 @@ class FastestCSV
         # we do the gsub twice in case there is a single character separating the escaped chars, e.g.:
         # "R", which would not have the second quote escaped
         # because the R will have matched the first match and then cant be used to make the second match
-        "\"#{z.to_s.encode!("UTF-8", invalid: :replace, undef: :replace, replace: ' ').gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4')}\""
+        "\"#{z.to_s.encode("UTF-8", invalid: :replace, undef: :replace, replace: ' ').gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4')}\""
       else
-        "#{z.to_s.encode!("UTF-8", invalid: :replace, undef: :replace, replace: ' ')}"
+        "#{z.to_s.encode("UTF-8", invalid: :replace, undef: :replace, replace: ' ')}"
       end
     end.join(",")}\n"
   end

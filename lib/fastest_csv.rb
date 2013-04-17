@@ -53,7 +53,7 @@ class FastestCSV
   end
 
   # Read all lines from the specified String into an array of arrays
-  def self.parse(data, &block)
+  def self.parse(data, _opts = {}, &block)
     csv = new(StringIO.new(data))
     if block.nil?
       begin
@@ -146,19 +146,20 @@ class FastestCSV
         # we do the gsub twice in case there is a single character separating the escaped chars, e.g.:
         # "R", which would not have the second quote escaped
         # because the R will have matched the first match and then cant be used to make the second match
-        "\"#{z.to_s.encode("UTF-8", invalid: :replace, undef: :replace, replace: ' ').gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4')}\""
+        "\"#{encode_if_needed(z).gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4')}\""
       else
-        "#{z.to_s.encode("UTF-8", invalid: :replace, undef: :replace, replace: ' ')}"
+        "#{encode_if_needed(z)}"
       end
     end.join(",")}\n"
   end
 
-  def clean_end(_str)
-    str = _str.to_s.encode!("UTF-8", invalid: :replace, undef: :replace, replace: ' ')
-    if(str.ends_with?("\\") && !str.ends_with?("\\\\"))
-      "#{str}\\"
+  # encode only if not already encoded as UTF-8
+  def encode_if_needed(_str)
+    str = _str.to_s
+    if(str.encoding == Encoding::UTF_8)
+      str
     else
-      str.strip
+      str.encode("UTF-8", invalid: :replace, undef: :replace, replace: ' ')
     end
   end
   

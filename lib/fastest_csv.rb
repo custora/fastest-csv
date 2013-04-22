@@ -26,10 +26,11 @@ class FastestCSV
   # Opens a csv file. Pass a FastestCSV instance to the provided block,
   # or return it when no block is provided
   def self.open(path, mode = "rb", _opts = {})
-    opts = {col_sep: ",", write_buffer_lines: DEFAULT_WRITE_BUFFER_LINES}.merge(_opts)
+    opts = {col_sep: ",", write_buffer_lines: DEFAULT_WRITE_BUFFER_LINES, force_utf8: false}.merge(_opts)
     @@separator = opts[:col_sep]
     @@write_buffer_lines = opts[:write_buffer_lines]
     @@linebreak = opts[:line_break] || "\n"
+    @encode = opts[:force_utf8]
     csv = new(File.open(path, mode))
     if block_given?
       begin
@@ -142,25 +143,20 @@ class FastestCSV
     #{}"#{_array.map{|x| x ? "\"#{clean_end(x).gsub("\"", "\"\"")}\"" : "\"\"" }.join(",")}\n"
 
     "#{_array.map do |z|
-      if(z && z.to_s.index(/,|\"|\\|\n|\r/))
+      z = z.to_s
+      # check for encoding inline instead of as a separate method (method look ups are slow)
+      if(@encode && (Encoding::US_ASCII != z.encoding) && (Encoding::UTF_8 != z.encoding))
+        z = z.encode("UTF-8", invalid: :replace, undef: :replace, replace: ' ')
+      end
+      if(z.index(/,|\"|\\|\n|\r/))
         # we do the gsub twice in case there is a single character separating the escaped chars, e.g.:
         # "R", which would not have the second quote escaped
         # because the R will have matched the first match and then cant be used to make the second match
-        "\"#{encode_if_needed(z).gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4')}\""
+        "\"#{z.gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4')}\""
       else
-        "#{encode_if_needed(z)}"
+        "#{z}"
       end
     end.join(",")}\n"
-  end
-
-  # encode only if not already encoded as UTF-8
-  def encode_if_needed(_str)
-    str = _str.to_s
-    if((Encoding::US_ASCII == str.encoding) || (Encoding::UTF_8 == str.encoding))
-      str
-    else
-      str.encode("UTF-8", invalid: :replace, undef: :replace, replace: ' ')
-    end
   end
   
   # Close the wrapped IO

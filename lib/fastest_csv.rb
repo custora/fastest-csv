@@ -30,7 +30,7 @@ class FastestCSV
     @@separator = opts[:col_sep]
     @@write_buffer_lines = opts[:write_buffer_lines]
     @@linebreak = opts[:line_break] || "\n"
-    @encode = opts[:force_utf8]
+    @@encode = opts[:force_utf8]
     csv = new(File.open(path, mode))
     if block_given?
       begin
@@ -145,8 +145,8 @@ class FastestCSV
     "#{_array.map do |z|
       z = z.to_s
       # check for encoding inline instead of as a separate method (method look ups are slow)
-      if(@encode && (Encoding::US_ASCII != z.encoding) && (Encoding::UTF_8 != z.encoding))
-        z = z.encode("UTF-8", invalid: :replace, undef: :replace, replace: ' ')
+      if(@@encode && ((Encoding::US_ASCII != z.encoding) && (Encoding::UTF_8 != z.encoding) || !z.valid_encoding?))
+        z.encode!("UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
       end
       if(z.index(/,|\"|\\|\n|\r/))
         # we do the gsub twice in case there is a single character separating the escaped chars, e.g.:

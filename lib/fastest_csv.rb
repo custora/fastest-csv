@@ -156,7 +156,7 @@ class FastestCSV
   # encode only if not already encoded as UTF-8
   def encode_if_needed(_str)
     str = _str.to_s
-    if(str.encoding == Encoding::UTF_8)
+    if([Encoding::UTF_8, Encoding::US_ASCII].include?(str.encoding))
       str
     else
       str.encode("UTF-8", invalid: :replace, undef: :replace, replace: ' ')

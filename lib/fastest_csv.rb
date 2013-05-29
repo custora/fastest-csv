@@ -26,12 +26,7 @@ class FastestCSV
   # Opens a csv file. Pass a FastestCSV instance to the provided block,
   # or return it when no block is provided
   def self.open(path, mode = "rb", _opts = {})
-    opts = {col_sep: ",", write_buffer_lines: DEFAULT_WRITE_BUFFER_LINES, force_utf8: false}.merge(_opts)
-    @@separator = opts[:col_sep]
-    @@write_buffer_lines = opts[:write_buffer_lines]
-    @@linebreak = opts[:line_break] || "\n"
-    @@encode = opts[:force_utf8]
-    csv = new(File.open(path, mode))
+    csv = new(File.open(path, mode), _opts)
     if block_given?
       begin
         yield csv
@@ -55,7 +50,7 @@ class FastestCSV
 
   # Read all lines from the specified String into an array of arrays
   def self.parse(data, _opts = {}, &block)
-    csv = new(StringIO.new(data))
+    csv = new(StringIO.new(data), _opts)
     if block.nil?
       begin
         csv.read
@@ -72,7 +67,13 @@ class FastestCSV
   end
 
   # Create new FastestCSV wrapping the specified IO object
-  def initialize(io)
+  def initialize(io, _opts = {})
+    opts = {col_sep: ",", write_buffer_lines: DEFAULT_WRITE_BUFFER_LINES, force_utf8: false}.merge(_opts)
+    @@separator = opts[:col_sep]
+    @@write_buffer_lines = opts[:write_buffer_lines]
+    @@linebreak = opts[:line_break] || "\n"
+    @@encode = opts[:force_utf8]
+
     @io = io
     @current_buffer_count = 0
     @current_write_buffer = ""

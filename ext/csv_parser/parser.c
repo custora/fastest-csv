@@ -104,9 +104,10 @@ static VALUE escapable_chars(VALUE self, VALUE str)
     if (len == 0)
         return Qnil;
 
+    int i;
     char c;
 
-    for (int i = 0; i < len; i++)
+    for (i = 0; i < len; i++)
     {
         c = ptr[i];
         //,|\"|\\|\n|\r

@@ -93,6 +93,31 @@ static VALUE parse_line(VALUE self, VALUE str, VALUE sep)
     return array;
 }
 
+static VALUE escapable_chars(VALUE self, VALUE str)
+{
+    if (NIL_P(str))
+        return Qnil;
+    
+    const char *ptr = RSTRING_PTR(str);
+    int len = (int) RSTRING_LEN(str);  /* cast to prevent warning in 64-bit OS */
+
+    if (len == 0)
+        return Qnil;
+
+    char c;
+
+    for (int i = 0; i < len; i++)
+    {
+        c = ptr[i];
+        //,|\"|\\|\n|\r
+        if(c == ',' || c == '"' || c == '\\' || c == '\n' || c == '\r')
+        {
+            return Qtrue;
+        }
+    }
+    return Qfalse;
+}
+
 void Init_csv_parser()
 {
     /*
@@ -101,4 +126,5 @@ void Init_csv_parser()
     */
     mCsvParser = rb_define_module("CsvParser");
     rb_define_module_function(mCsvParser, "parse_line", parse_line, 2);
+    rb_define_module_function(mCsvParser, "escapable_chars", escapable_chars, 1);
 }

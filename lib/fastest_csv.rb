@@ -66,6 +66,10 @@ class FastestCSV
     CsvParser.parse_line(line, @@separator)
   end
 
+  def self.escapable_chars?(_str)
+    CsvParser.escapable_chars(_str)
+  end
+
   # Create new FastestCSV wrapping the specified IO object
   def initialize(io, _opts = {})
     opts = {col_sep: ",", write_buffer_lines: DEFAULT_WRITE_BUFFER_LINES, force_utf8: false}.merge(_opts)
@@ -149,7 +153,7 @@ class FastestCSV
       if(@@encode && ((Encoding::US_ASCII != z.encoding) && (Encoding::UTF_8 != z.encoding) || !z.valid_encoding?))
         z.encode!("UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
       end
-      if(z.index(/,|\"|\\|\n|\r/))
+      if(escapable_chars?(z)) # z.index(/,|\"|\\|\n|\r/)
         # we do the gsub twice in case there is a single character separating the escaped chars, e.g.:
         # "R", which would not have the second quote escaped
         # because the R will have matched the first match and then cant be used to make the second match

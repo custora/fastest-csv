@@ -6,6 +6,8 @@ require 'stringio'
 # Fast CSV parser using native code
 class FastestCSV
   DEFAULT_WRITE_BUFFER_LINES = 250_000
+  SINGLE_SPACE = ' '
+  COMMA = ","
 
   def self.version
     VERSION
@@ -151,7 +153,7 @@ class FastestCSV
       z = z.to_s
       # check for encoding inline instead of as a separate method (method look ups are slow)
       if(@@encode && ((Encoding::US_ASCII != z.encoding) && (Encoding::UTF_8 != z.encoding) || !z.valid_encoding?))
-        z.encode!("UTF-8", "binary", invalid: :replace, undef: :replace, replace: ' ')
+        z.encode!("UTF-8", "binary", invalid: :replace, undef: :replace, replace: SINGLE_SPACE)
       end
       if(FastestCSV::escapable_chars?(z)) # z.index(/,|\"|\\|\n|\r/)
         # we do the gsub twice in case there is a single character separating the escaped chars, e.g.:
@@ -159,9 +161,9 @@ class FastestCSV
         # because the R will have matched the first match and then cant be used to make the second match
         "\"#{z.gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4')}\""
       else
-        "#{z}"
+        z
       end
-    end.join(",")}\n"
+    end.join(COMMA)}\n"
   end
   
   # Close the wrapped IO

@@ -8,6 +8,7 @@ class FastestCSV
   DEFAULT_WRITE_BUFFER_LINES = 250_000
   SINGLE_SPACE = ' '
   COMMA = ","
+  ESCAPED_QUOTE = "\""
 
   def self.version
     VERSION
@@ -103,14 +104,14 @@ class FastestCSV
   # Read next line from the wrapped IO and return as array or nil at EOF
   def shift
     if line = @io.gets(@@linebreak)
-      quote_count = line.count("\"")
+      quote_count = line.count(ESCAPED_QUOTE)
       if(quote_count % 2 == 0)
         CsvParser.parse_line(line, @@separator)
       else
         while(quote_count % 2 != 0)
           break unless new_line = @io.gets(@@linebreak)
           line << new_line
-          quote_count = line.count("\"")
+          quote_count = line.count(ESCAPED_QUOTE)
         end
         CsvParser.parse_line(line, @@separator)
       end

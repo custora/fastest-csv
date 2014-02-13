@@ -153,7 +153,9 @@ class FastestCSV
     "#{_array.map do |z|
       z = z.to_s
       # check for encoding inline instead of as a separate method (method look ups are slow)
-      if(@@encode && ((Encoding::US_ASCII != z.encoding) && (Encoding::UTF_8 != z.encoding) || !z.valid_encoding?))
+      if(@@encode &&
+        ((Encoding::US_ASCII != z.encoding) && (Encoding::UTF_8 != z.encoding) &&
+          (Encoding::ASCII_8BIT != z.encoding) || !z.valid_encoding?))
         z.encode!("UTF-8", "binary", invalid: :replace, undef: :replace, replace: SINGLE_SPACE)
       end
       if(FastestCSV::escapable_chars?(z)) # z.index(/,|\"|\\|\n|\r/)

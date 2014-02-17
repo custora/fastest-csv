@@ -130,7 +130,7 @@ static VALUE replace_chars(VALUE self, VALUE str, VALUE chr, VALUE replacement)
     const char *chrc = RSTRING_PTR(chr);
     const char *replacementc = RSTRING_PTR(replacement);
 
-    while (s <= send) {
+    while (s < send) {
         if (*s == *chrc)
             *s = *replacementc;
         s++;

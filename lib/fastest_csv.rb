@@ -143,9 +143,9 @@ class FastestCSV
     n_elements = _array.length
 
     # join all of the fields using a "weird" separator that should not appear in a CSV file
-    str = "#{_array.join(SEPARATOR_CHAR)}\n"
+    str = "#{_array.join(SEPARATOR_CHAR)}"
     # make sure we have the expected number of SEPARATOR_CHAR
-    raise "element includs an instance of SEPARATOR_CHAR" if str.count(SEPARATOR_CHAR) != n_elements - 1
+    raise "element includes an instance of SEPARATOR_CHAR" if str.count(SEPARATOR_CHAR) != n_elements - 1
 
     # check for escapable chars; if string has any, we need to take a step back and fix it element-by-element
     if FastestCSV::escapable_chars?(str)
@@ -155,7 +155,7 @@ class FastestCSV
         else
           e
         end
-      end.join(SEPARATOR_CHAR)}\n"
+      end.join(SEPARATOR_CHAR)}"
     end
 
     # check for proper encoding and encode string if needed
@@ -165,8 +165,8 @@ class FastestCSV
         str.encode!("UTF-8", "binary", invalid: :replace, undef: :replace, replace: SINGLE_SPACE)
     end
 
-    # replace all instances of SEPARATOR_CHAR with COMMA
-    FastestCSV::replace_chars(str, SEPARATOR_CHAR, COMMA)
+    # replace all instances of SEPARATOR_CHAR with COMMA and end an eol
+    "#{FastestCSV::replace_chars(str, SEPARATOR_CHAR, COMMA)}\n"
   end
   
   # Close the wrapped IO

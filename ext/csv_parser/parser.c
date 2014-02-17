@@ -99,23 +99,15 @@ static VALUE escapable_chars(VALUE self, VALUE str)
         return Qnil;
     
     const char *ptr = RSTRING_PTR(str);
-    int len = (int) RSTRING_LEN(str);  /* cast to prevent warning in 64-bit OS */
+    const char *e = RSTRING_END(str);
 
-    if (len == 0)
-        return Qnil;
-
-    int i;
-    char c;
-
-    for (i = 0; i < len; i++)
-    {
-        c = ptr[i];
-        //,|\"|\\|\n|\r
-        if(c == ',' || c == '"' || c == '\\' || c == '\n' || c == '\r')
-        {
+    while (ptr < e) {
+        if(*ptr == ',' || *ptr == '"' || *ptr == '\\' || *ptr == '\n' || *ptr == '\r')
             return Qtrue;
-        }
+
+        ptr++;
     }
+
     return Qfalse;
 }
 

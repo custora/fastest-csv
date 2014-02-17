@@ -150,6 +150,8 @@ class FastestCSV
     # check for escapable chars; if string has any, we need to take a step back and fix it element-by-element
     if FastestCSV::escapable_chars?(str)
       str = "#{_array.map do |e|
+        e = e.to_s
+        
         if FastestCSV::escapable_chars?(e)
           "\"#{e.gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4')}\""
         else

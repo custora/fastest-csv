@@ -143,7 +143,7 @@ class FastestCSV
     n_elements = _array.length
 
     # join all of the fields using a "weird" separator that should not appear in a CSV file
-    str = _array.join(SEPARATOR_CHAR)
+    str = "#{_array.join(SEPARATOR_CHAR)}\n"
     # make sure we have the expected number of SEPARATOR_CHAR
     raise "element includs an instance of SEPARATOR_CHAR" if str.count(SEPARATOR_CHAR) != n_elements - 1
 
@@ -155,7 +155,7 @@ class FastestCSV
         else
           e
         end
-      end.join(SEPARATOR_CHAR)}"
+      end.join(SEPARATOR_CHAR)}\n"
     end
 
     # check for proper encoding and encode string if needed

@@ -9,6 +9,7 @@ class FastestCSV
   SINGLE_SPACE = ' '
   COMMA = ","
   ESCAPED_QUOTE = "\""
+  SEPARATOR_CHAR = "\x07"
 
   def self.version
     VERSION
@@ -73,6 +74,11 @@ class FastestCSV
     CsvParser.escapable_chars(_str)
   end
 
+  def self.replace_chars(_str, _chr, _replacement)
+    # replace all instances of _chr with _replacement in _str. return number of replacements.
+    CsvParser.replace_chars(_str, _chr, _replacement)
+  end
+
   # Create new FastestCSV wrapping the specified IO object
   def initialize(io, _opts = {})
     opts = {col_sep: ",", write_buffer_lines: DEFAULT_WRITE_BUFFER_LINES, force_utf8: false}.merge(_opts)
@@ -134,39 +140,33 @@ class FastestCSV
   end
 
   def to_csv(_array)
-    # wrap all fields in quotes
-    # replace any \ with \\ (provided the \ isn't already escaped like \\)
-    #x.to_s.gsub(/([^\\])(\\(\\\\)+)([^\\])/, '\1\2\\\\\4')
+    n_elements = _array.length
 
-    # replace any " with ""
-    #x.to_s.gsub(/([^\"])(\"(\"\")+)([^\"])/, '\1\2\\\"\4')
-    #x.to_s.gsub(/((\"(\"\")+)|(([^\"]|^)\"([^\"]|$)))/, "\1\"").gsub(/((\\(\\\\)+)|(([^\\]|^)\\([^\\]|$)))/, "\1\\")
-    #x.to_s.gsub(/((\"(\"\")+))/, "\1\"\"").gsub(/(\\(\\\\)*)/, "\1\\")
+    # join all of the fields using a "weird" separator that should not appear in a CSV file
+    str = _array.join(SEPARATOR_CHAR)
+    # make sure we have the expected number of SEPARATOR_CHAR
+    raise "element includs an instance of SEPARATOR_CHAR" if str.count(SEPARATOR_CHAR) != n_elements - 1
 
-    #.map{|x| x.to_s.encode!("UTF-8", invalid: :replace, undef: :replace, replace: ' ')}
+    # check for escapable chars; if string has any, we need to take a step back and fix it element-by-element
+    if FastestCSV::escapable_chars?(str)
+      str = "#{_array.map do |e|
+        if FastestCSV::escapable_chars?(e)
+          "\"#{e.gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4')}\""
+        else
+          e
+        end
+      end.join(SEPARATOR_CHAR)}"
+    end
 
+    # check for proper encoding and encode string if needed
+    if(@@encode &&
+      ((Encoding::US_ASCII != str.encoding) && (Encoding::UTF_8 != str.encoding) &&
+        (Encoding::ASCII_8BIT != str.encoding) || !str.valid_encoding?))
+        str.encode!("UTF-8", "binary", invalid: :replace, undef: :replace, replace: SINGLE_SPACE)
+    end
 
-    #{}"#{_array.map{|x| x ? "\"#{x.to_s.gsub(/([^\\]|^)\\\"/, "\1\\\\\\\\\"").gsub(/([^"]|^)\"/, "\1\"\"")} : "\"\""}.join(",")}\n"
-    # PREVIOUS GOOD ONE:
-    #{}"#{_array.map{|x| x ? "\"#{clean_end(x).gsub("\"", "\"\"")}\"" : "\"\"" }.join(",")}\n"
-
-    "#{_array.map do |z|
-      z = z.to_s
-      # check for encoding inline instead of as a separate method (method look ups are slow)
-      if(@@encode &&
-        ((Encoding::US_ASCII != z.encoding) && (Encoding::UTF_8 != z.encoding) &&
-          (Encoding::ASCII_8BIT != z.encoding) || !z.valid_encoding?))
-        z.encode!("UTF-8", "binary", invalid: :replace, undef: :replace, replace: SINGLE_SPACE)
-      end
-      if(FastestCSV::escapable_chars?(z)) # z.index(/,|\"|\\|\n|\r/)
-        # we do the gsub twice in case there is a single character separating the escaped chars, e.g.:
-        # "R", which would not have the second quote escaped
-        # because the R will have matched the first match and then cant be used to make the second match
-        "\"#{z.gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4')}\""
-      else
-        z
-      end
-    end.join(COMMA)}\n"
+    # replace all instances of SEPARATOR_CHAR with COMMA
+    FastestCSV::replace_chars(str, SEPARATOR_CHAR, COMMA)
   end
   
   # Close the wrapped IO

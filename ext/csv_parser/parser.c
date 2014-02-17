@@ -119,6 +119,26 @@ static VALUE escapable_chars(VALUE self, VALUE str)
     return Qfalse;
 }
 
+static VALUE replace_chars(VALUE self, VALUE str, VALUE chr, VALUE replacement)
+{
+    if (NIL_P(str))
+        return 0;
+
+    char *s = RSTRING_PTR(str);
+    char *send = RSTRING_END(str);
+
+    const char *chrc = RSTRING_PTR(chr);
+    const char *replacementc = RSTRING_PTR(replacement);
+
+    while (s <= send) {
+        if (*s == *chrc)
+            *s = *replacementc;
+        s++;
+    }
+
+    return str;
+}
+
 void Init_csv_parser()
 {
     /*
@@ -128,4 +148,5 @@ void Init_csv_parser()
     mCsvParser = rb_define_module("CsvParser");
     rb_define_module_function(mCsvParser, "parse_line", parse_line, 2);
     rb_define_module_function(mCsvParser, "escapable_chars", escapable_chars, 1);
+    rb_define_module_function(mCsvParser, "replace_chars", replace_chars, 3);
 }

@@ -137,6 +137,6 @@ void Init_csv_parser()
     */
     mCsvParser = rb_define_module("CsvParser");
     rb_define_module_function(mCsvParser, "parse_line", parse_line, 2);
-    rb_define_module_function(mCsvParser, "escapable_chars_including_comma?", escapable_chars, 1);
-    rb_define_module_function(mCsvParser, "escapable_chars_not_comma?", escapable_chars, 1);
+    rb_define_module_function(mCsvParser, "escapable_chars_including_comma?", escapable_chars_including_comma, 1);
+    rb_define_module_function(mCsvParser, "escapable_chars_not_comma?", escapable_chars_not_comma, 1);
 }

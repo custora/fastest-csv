@@ -9,7 +9,6 @@ class FastestCSV
   SINGLE_SPACE = ' '
   COMMA = ","
   ESCAPED_QUOTE = "\""
-  SEPARATOR_CHAR = "\x07"
 
   def self.version
     VERSION
@@ -68,15 +67,6 @@ class FastestCSV
   
   def self.parse_line(line, _sep)
     CsvParser.parse_line(line, @@separator)
-  end
-
-  def self.escapable_chars?(_str)
-    CsvParser.escapable_chars(_str)
-  end
-
-  def self.replace_chars(_str, _chr, _replacement)
-    # replace all instances of _chr with _replacement in _str. return number of replacements.
-    CsvParser.replace_chars(_str, _chr, _replacement)
   end
 
   # Create new FastestCSV wrapping the specified IO object
@@ -143,21 +133,20 @@ class FastestCSV
     n_elements = _array.length
 
     # join all of the fields using a "weird" separator that should not appear in a CSV file
-    str = "#{_array.join(SEPARATOR_CHAR)}"
-    # make sure we have the expected number of SEPARATOR_CHAR
-    raise "element includes an instance of SEPARATOR_CHAR" if str.count(SEPARATOR_CHAR) != n_elements - 1
+    str = "#{_array.join(COMMA)}"
 
-    # check for escapable chars; if string has any, we need to take a step back and fix it element-by-element
-    if FastestCSV::escapable_chars?(str)
+    # check if we have too many commas now, or any non-comma escapable chars; if we do, we need to scan each element
+    # and surround the offending one with quotation marks
+    if str.count(',') != n_elements - 1 or CsvParser.escapable_chars_not_comma?(str)
       str = "#{_array.map do |e|
         e = e.to_s
         
-        if FastestCSV::escapable_chars?(e)
+        if CsvParser.escapable_chars_including_comma?(e)
           "\"#{e.gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4')}\""
         else
           e
         end
-      end.join(SEPARATOR_CHAR)}"
+      end.join(COMMA)}"
     end
 
     # check for proper encoding and encode string if needed
@@ -168,7 +157,7 @@ class FastestCSV
     end
 
     # replace all instances of SEPARATOR_CHAR with COMMA and end an eol
-    "#{FastestCSV::replace_chars(str, SEPARATOR_CHAR, COMMA)}\n"
+    "#{str}\n"
   end
   
   # Close the wrapped IO

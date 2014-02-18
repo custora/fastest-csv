@@ -93,7 +93,7 @@ static VALUE parse_line(VALUE self, VALUE str, VALUE sep)
     return array;
 }
 
-static VALUE escapable_chars(VALUE self, VALUE str)
+static VALUE escapable_chars_including_comma(VALUE self, VALUE str)
 {
     if (NIL_P(str))
         return Qnil;
@@ -111,24 +111,22 @@ static VALUE escapable_chars(VALUE self, VALUE str)
     return Qfalse;
 }
 
-static VALUE replace_chars(VALUE self, VALUE str, VALUE chr, VALUE replacement)
+static VALUE escapable_chars_not_comma(VALUE self, VALUE str)
 {
     if (NIL_P(str))
-        return 0;
+        return Qnil;
+    
+    const char *ptr = RSTRING_PTR(str);
+    const char *e = RSTRING_END(str);
 
-    char *s = RSTRING_PTR(str);
-    char *send = RSTRING_END(str);
+    while (ptr < e) {
+        if(*ptr == '"' || *ptr == '\\' || *ptr == '\n' || *ptr == '\r')
+            return Qtrue;
 
-    const char *chrc = RSTRING_PTR(chr);
-    const char *replacementc = RSTRING_PTR(replacement);
-
-    while (s < send) {
-        if (*s == *chrc)
-            *s = *replacementc;
-        s++;
+        ptr++;
     }
 
-    return str;
+    return Qfalse;
 }
 
 void Init_csv_parser()
@@ -139,6 +137,6 @@ void Init_csv_parser()
     */
     mCsvParser = rb_define_module("CsvParser");
     rb_define_module_function(mCsvParser, "parse_line", parse_line, 2);
-    rb_define_module_function(mCsvParser, "escapable_chars", escapable_chars, 1);
-    rb_define_module_function(mCsvParser, "replace_chars", replace_chars, 3);
+    rb_define_module_function(mCsvParser, "escapable_chars_including_comma?", escapable_chars, 1);
+    rb_define_module_function(mCsvParser, "escapable_chars_not_comma?", escapable_chars, 1);
 }

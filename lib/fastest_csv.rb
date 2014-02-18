@@ -10,6 +10,7 @@ class FastestCSV
   COMMA = ","
   ESCAPED_QUOTE = "\""
   SEPARATOR_CHAR = "\x07"
+  LINE_BREAK = "\n"
 
   def self.version
     VERSION
@@ -143,7 +144,7 @@ class FastestCSV
     n_elements = _array.length
 
     # join all of the fields using a "weird" separator that should not appear in a CSV file
-    str = "#{_array.join(SEPARATOR_CHAR)}"
+    str = _array.join(SEPARATOR_CHAR)
     # make sure we have the expected number of SEPARATOR_CHAR
     raise "element includes an instance of SEPARATOR_CHAR" if str.count(SEPARATOR_CHAR) != n_elements - 1
 
@@ -168,7 +169,7 @@ class FastestCSV
     end
 
     # replace all instances of SEPARATOR_CHAR with COMMA and end an eol
-    "#{FastestCSV::replace_chars(str, SEPARATOR_CHAR, COMMA)}\n"
+    FastestCSV::replace_chars(str, SEPARATOR_CHAR, COMMA)} + LINE_BREAK
   end
   
   # Close the wrapped IO

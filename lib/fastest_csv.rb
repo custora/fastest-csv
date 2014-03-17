@@ -6,6 +6,8 @@ require 'stringio'
 # Fast CSV parser using native code
 class FastestCSV
   DEFAULT_WRITE_BUFFER_LINES = 250_000
+  UTF_8_STRING = "UTF-8"
+  BINARY_STRING = "binary"
   SINGLE_SPACE = ' '
   COMMA = ","
   ESCAPED_QUOTE = "\""
@@ -100,14 +102,24 @@ class FastestCSV
   # Read next line from the wrapped IO and return as array or nil at EOF
   def shift
     if line = @io.gets(@@linebreak)
-      quote_count = line.count(ESCAPED_QUOTE)
+      begin
+        quote_count = line.count(ESCAPED_QUOTE)
+      rescue ArgumentError
+        line.encode!(UTF_8_STRING, BINARY_STRING, invalid: :replace, undef: :replace, replace: SINGLE_SPACE)
+        quote_count = line.count(ESCAPED_QUOTE)
+      end
       if(quote_count % 2 == 0)
         CsvParser.parse_line(line, @@separator)
       else
         while(quote_count % 2 != 0)
           break unless new_line = @io.gets(@@linebreak)
           line << new_line
-          quote_count = line.count(ESCAPED_QUOTE)
+          begin
+            quote_count = line.count(ESCAPED_QUOTE)
+          rescue ArgumentError
+            line.encode!(UTF_8_STRING, BINARY_STRING, invalid: :replace, undef: :replace, replace: SINGLE_SPACE)
+            quote_count = line.count(ESCAPED_QUOTE)
+          end
         end
         CsvParser.parse_line(line, @@separator)
       end
@@ -153,7 +165,7 @@ class FastestCSV
     if(@@encode &&
       ((Encoding::US_ASCII != str.encoding) && (Encoding::UTF_8 != str.encoding) &&
         (Encoding::ASCII_8BIT != str.encoding) || !str.valid_encoding?))
-        str.encode!("UTF-8", "binary", invalid: :replace, undef: :replace, replace: SINGLE_SPACE)
+        str.encode!(UTF_8_STRING, BINARY_STRING, invalid: :replace, undef: :replace, replace: SINGLE_SPACE)
     end
 
     # replace all instances of SEPARATOR_CHAR with COMMA and end an eol

@@ -134,11 +134,18 @@ class FastestCSV
     @current_buffer_count += 1
     @current_write_buffer << to_csv(_array)
     if(@current_buffer_count == @@write_buffer_lines)
-      # TODO: would write_nonblock help?
-      @io.write(@current_write_buffer)
-      @current_write_buffer = ""
-      @current_buffer_count = 0
+      flush(false)
     end
+  end
+
+  def flush(force_flush = true)
+    # TODO: could probably use write_nonblock to eek out a bit more performance
+    @io.write(@current_write_buffer)
+    # io object maintains it's own buffer, so to ensure
+    # data gets written to the disk immediately need to call flush explicitly
+    @io.flush if force_flush
+    @current_write_buffer = ""
+    @current_buffer_count = 0
   end
 
   def to_csv(_array)

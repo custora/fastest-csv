@@ -21,7 +21,7 @@ static VALUE cFastestCSV;
 */
 static VALUE mCsvParser;
 
-static VALUE parse_line(VALUE self, VALUE str, VALUE sep)
+static VALUE parse_line(VALUE self, VALUE str, VALUE sep, VALUE quote_char)
 {
     const char *sepc = RSTRING_PTR(sep);
     if (NIL_P(str))
@@ -29,6 +29,10 @@ static VALUE parse_line(VALUE self, VALUE str, VALUE sep)
     
     const char *ptr = RSTRING_PTR(str);
     int len = (int) RSTRING_LEN(str);  /* cast to prevent warning in 64-bit OS */
+
+    const char *quotec = RSTRING_PTR(quote_char);
+    if (NIL_P(str))
+        return Qnil;
 
     if (len == 0)
         return Qnil;
@@ -59,7 +63,7 @@ static VALUE parse_line(VALUE self, VALUE str, VALUE sep)
                     state = UNQUOTED;
                 }
         /* if encounter a quote */
-        } else if (c == '"') {
+        } else if (c == quotec[0]) {
                 if (state == UNQUOTED) {
                     state = IN_QUOTED;
                 }
@@ -136,7 +140,7 @@ void Init_csv_parser()
     rb_define_singleton_method(cFastestCSV, "parse_line", parse_line, 1);
     */
     mCsvParser = rb_define_module("CsvParser");
-    rb_define_module_function(mCsvParser, "parse_line", parse_line, 2);
+    rb_define_module_function(mCsvParser, "parse_line", parse_line, 3);
     rb_define_module_function(mCsvParser, "escapable_chars_including_comma?", escapable_chars_including_comma, 1);
     rb_define_module_function(mCsvParser, "escapable_chars_not_comma?", escapable_chars_not_comma, 1);
 }

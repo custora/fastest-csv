@@ -104,10 +104,10 @@ class FastestCSV
   def shift
     if line = @io.gets(@@linebreak)
       begin
-        quote_count = line.count(ESCAPED_QUOTE)
+        quote_count = line.count(@@quote_character)
       rescue ArgumentError
         line.encode!(UTF_8_STRING, BINARY_STRING, invalid: :replace, undef: :replace, replace: SINGLE_SPACE)
-        quote_count = line.count(ESCAPED_QUOTE)
+        quote_count = line.count(@@quote_character)
       end
       if(quote_count % 2 == 0)
         CsvParser.parse_line(line, @@separator, @@quote_character)
@@ -116,10 +116,10 @@ class FastestCSV
           break unless new_line = @io.gets(@@linebreak)
           line << new_line
           begin
-            quote_count = line.count(ESCAPED_QUOTE)
+            quote_count = line.count(@@quote_character)
           rescue ArgumentError
             line.encode!(UTF_8_STRING, BINARY_STRING, invalid: :replace, undef: :replace, replace: SINGLE_SPACE)
-            quote_count = line.count(ESCAPED_QUOTE)
+            quote_count = line.count(@@quote_character)
           end
         end
         CsvParser.parse_line(line, @@separator, @@quote_character)
@@ -157,7 +157,7 @@ class FastestCSV
 
     # check if we have too many commas now, or any non-comma escapable chars; if we do, we need to scan each element
     # and surround the offending one with quotation marks
-    if str.count(',') != n_elements - 1 or CsvParser.escapable_chars_not_comma?(str)
+    if str.count(COMMA) != n_elements - 1 or CsvParser.escapable_chars_not_comma?(str)
       str = "#{_array.map do |e|
         e = e.to_s
         

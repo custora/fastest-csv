@@ -22,8 +22,8 @@ class FastestCSV
   #end
 
   # Pass each line of the specified +path+ as array to the provided +block+
-  def self.foreach(path, opts, &block)
-    open(path, "rb:UTF-8", opts) do |reader|
+  def self.foreach(path, _opts={}, &block)
+    open(path, "rb:UTF-8", _opts) do |reader|
       reader.each(&block)
     end
   end

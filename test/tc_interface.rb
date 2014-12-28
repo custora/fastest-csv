@@ -2,10 +2,10 @@
 # Tests copied from faster_csv by James Edward Gray II
 #
 
-require 'test/unit'
+require 'minitest/autorun'
 require 'fastest_csv'
 
-class TestFastestCSVInterface < Test::Unit::TestCase
+class TestFastestCSVInterface < Minitest::Test
 
   def setup
     @path = File.join(File.dirname(__FILE__), "temp_test_data.csv")
@@ -32,7 +32,7 @@ class TestFastestCSVInterface < Test::Unit::TestCase
   
   def test_open_and_close
     csv = FastestCSV.open(@path, "r+")
-    assert_not_nil(csv)
+    refute_nil(csv)
     assert_instance_of(FastestCSV, csv)
     assert_equal(false, csv.closed?)
     csv.close

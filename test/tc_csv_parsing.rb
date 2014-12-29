@@ -1,6 +1,10 @@
+# Tests adapted from faster_csv:
+# https://github.com/JEG2/faster_csv/blob/master/test/tc_csv_parsing.rb
+# 
+# copyright notice included from that file:
 #
-# Tests copied from faster_csv by James Edward Gray II
-#
+#  Created by James Edward Gray II on 2005-10-31.
+#  Copyright 2012 Gray Productions. All rights reserved.
 
 require 'minitest/autorun'
 require 'fastest_csv'
@@ -11,6 +15,7 @@ require 'fastest_csv'
 # document in one place (intentionally) and that is to make the default row
 # separator <tt>$/</tt>.
 # 
+
 class TestCSVParsing < Minitest::Test
 
   def test_mastering_regex_example
@@ -20,7 +25,9 @@ class TestCSVParsing < Minitest::Test
                   FastestCSV.parse_line(ex) )
   end
 
-  # Pulled from:  http://www.ruby-lang.org/cgi-bin/cvsweb.cgi/ruby/test/csv/test_csv.rb?rev=1.12.2.2;content-type=text%2Fplain
+  # See ruby csv test suite: 
+  # https://github.com/ruby/ruby/blob/trunk/test/csv/test_csv_parsing.rb
+
   def test_std_lib_csv
     [ ["\t", ["\t"]],
       ["foo,\"\"\"\"\"\",baz", ["foo", "\"\"", "baz"]],
@@ -121,6 +128,22 @@ class TestCSVParsing < Minitest::Test
     ].each do |edge_case|
       assert_equal(edge_case.last, FastestCSV.parse_line(edge_case.first))
     end
+  end
+
+  def test_non_regex_edge_cases
+    
+    [["foo,\"foo,bar,baz,foo\",\"foo\"", ["foo", "foo,bar,baz,foo", "foo"]]].each do |edge_case|
+      assert_equal(edge_case.last, FastestCSV.parse_line(edge_case.first))
+    end
+
+    # Unlike FasterCSV, we are not doing much in the way of error checking, 
+    # and so we don't have malformed CSV checks. But perhaps we should, if we 
+    # can trade it off for speed? 
+
+    # assert_raise(FastestCSV::MalformedCSVError) do
+    #   FastestCSV.parse_line("1,\"23\"4\"5\", 6")
+    # end
+
   end
 
 end

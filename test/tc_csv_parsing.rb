@@ -1,6 +1,6 @@
 # Tests adapted from faster_csv:
 # https://github.com/JEG2/faster_csv/blob/master/test/tc_csv_parsing.rb
-# 
+#
 # copyright notice included from that file:
 #
 #  Created by James Edward Gray II on 2005-10-31.
@@ -9,12 +9,12 @@
 require 'minitest/autorun'
 require 'fastest_csv'
 
-# 
-# Following tests are my interpretation of the 
-# {CSV RCF}[http://www.ietf.org/rfc/rfc4180.txt].  I only deviate from that 
+#
+# Following tests are my interpretation of the
+# {CSV RCF}[http://www.ietf.org/rfc/rfc4180.txt].  I only deviate from that
 # document in one place (intentionally) and that is to make the default row
 # separator <tt>$/</tt>.
-# 
+#
 
 class TestCSVParsing < Minitest::Test
 
@@ -25,7 +25,7 @@ class TestCSVParsing < Minitest::Test
                   FastestCSV.parse_line(ex) )
   end
 
-  # See ruby csv test suite: 
+  # See ruby csv test suite:
   # https://github.com/ruby/ruby/blob/trunk/test/csv/test_csv_parsing.rb
 
   def test_std_lib_csv
@@ -58,7 +58,7 @@ class TestCSVParsing < Minitest::Test
       [";,;", [";", ";"]] ].each do |csv_test|
       assert_equal(csv_test.last, FastestCSV.parse_line(csv_test.first))
     end
-    
+
     [ ["foo,\"\"\"\"\"\",baz", ["foo", "\"\"", "baz"]],
       ["foo,\"\"\"bar\"\"\",baz", ["foo", "\"bar\"", "baz"]],
       ["foo,\"\r\n\",baz", ["foo", "\r\n", "baz"]],
@@ -105,11 +105,11 @@ class TestCSVParsing < Minitest::Test
   def test_james_edge_cases
     # A read at eof? should return nil.
     assert_equal(nil, FastestCSV.parse_line(""))
-    # 
+    #
     # With CSV it's impossible to tell an empty line from a line containing a
     # single +nil+ field.  The standard CSV library returns <tt>[nil]</tt>
     # in these cases, but <tt>Array.new</tt> makes more sense to me.
-    # 
+    #
     #assert_equal(Array.new, FastestCSV.parse_line("\n1,2,3\n"))
     assert_equal([nil], FastestCSV.parse_line("\n1,2,3\n"))
   end
@@ -131,14 +131,14 @@ class TestCSVParsing < Minitest::Test
   end
 
   def test_non_regex_edge_cases
-    
+
     [["foo,\"foo,bar,baz,foo\",\"foo\"", ["foo", "foo,bar,baz,foo", "foo"]]].each do |edge_case|
       assert_equal(edge_case.last, FastestCSV.parse_line(edge_case.first))
     end
 
-    # Unlike FasterCSV, we are not doing much in the way of error checking, 
-    # and so we don't have malformed CSV checks. But perhaps we should, if we 
-    # can trade it off for speed? 
+    # Unlike FasterCSV, we are not doing much in the way of error checking,
+    # and so we don't have malformed CSV checks. But perhaps we should, if we
+    # can trade it off for speed?
 
     # assert_raise(FastestCSV::MalformedCSVError) do
     #   FastestCSV.parse_line("1,\"23\"4\"5\", 6")

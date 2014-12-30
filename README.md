@@ -30,7 +30,7 @@ Parse single line
 
     FastestCSV.parse_line("one,two,three")
      => ["one", "two", "three"]
-    
+
     "one,two,three".parse_csv
      => ["one", "two", "three"]
 
@@ -47,7 +47,7 @@ Parse file with header
     FastestCSV.open("path/to/file.csv") do |csv|
       fields = csv.shift
       while values = csv.shift
-        # 
+        #
       end
     end
 
@@ -64,6 +64,10 @@ Write array to CSV
     FastestCSV.open("path/to/file.csv", "wb") do |csv|
       csv << ["1", "2", "3"]
     end
+
+## Tests
+
+`rake test`
 
 ## Contributing
 

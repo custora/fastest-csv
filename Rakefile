@@ -13,10 +13,9 @@ end
 
 require 'rake/testtask'
 Rake::TestTask.new do |t|
+  Rake::Task['compile:csv_parser'].invoke
   t.libs << "test"
   t.test_files = FileList['test/tc_*.rb']
-  #test.libs << 'lib' << 'test'
-  #test.pattern = 'test/**/test_*.rb'
-  #test.verbose = true
+  t.verbose = true
 end
 

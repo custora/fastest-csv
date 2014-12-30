@@ -18,5 +18,6 @@ Gem::Specification.new do |gem|
   gem.extensions  = ['ext/csv_parser/extconf.rb']
 
   gem.add_development_dependency 'rake-compiler', '~> 0.9'
+  gem.add_development_dependency 'minitest', '~> 5.4'
 
 end

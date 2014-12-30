@@ -26,8 +26,8 @@ THE SOFTWARE.
 
 
 
-The code is a modification of Maarten Oelering's version of FastestCSV 
-(https://github.com/brightcode/fastest-csv), covered under the license below: 
+The code is a modification of Maarten Oelering's version of FastestCSV
+(https://github.com/brightcode/fastest-csv), covered under the license below:
 
 Copyright (c) 2012 Maarten Oelering
 
@@ -58,8 +58,10 @@ The files
 
   tc_csv_parsing.rb
   tc_interface.rb
+  tc_speed.rb
+  test_data.csv
 
-are adapted from James Edward Gray II's FasterCSV 
+are adapted from James Edward Gray II's FasterCSV
 (https://github.com/JEG2/faster_csv), and are released under the Ruby license:
 
 Ruby is copyrighted free software by Yukihiro Matsumoto <matz@netlab.jp>.
@@ -108,9 +110,9 @@ You can redistribute it and/or modify it under either the terms of the
      For the list of those files and their copying conditions, see the
      file LEGAL.
 
-  5. The scripts and library files supplied as input to or produced as 
+  5. The scripts and library files supplied as input to or produced as
      output from the software do not automatically fall under the
-     copyright of the software, but belong to whomever generated them, 
+     copyright of the software, but belong to whomever generated them,
      and may be sold commercially, and may be aggregated with this
      software.
 

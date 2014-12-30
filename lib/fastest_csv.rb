@@ -12,14 +12,14 @@ class FastestCSV
   COMMA = ","
   ESCAPED_QUOTE = "\""
 
-  def self.version
-    VERSION
-  end
-  
   #if RUBY_PLATFORM =~ /java/
   #  require 'jruby'
   #  org.brightcode.CsvParserService.new.basicLoad(JRuby.runtime)
   #end
+
+  def self.version
+    VERSION
+  end
 
   # Pass each line of the specified +path+ as array to the provided +block+
   def self.foreach(path, _opts={}, &block)
@@ -66,14 +66,24 @@ class FastestCSV
       csv.each(&block)
     end
   end
-  
+
   def self.parse_line(line, _sep = ",", _quote = "\"")
     CsvParser.parse_line(line, _sep, _quote)
   end
 
+  def self.generate_line(line, _sep = ",", _quote = "\"", _force_quote = false)
+    CsvParser.generate_line(line, _sep, _quote, !!_force_quote)
+  end
+
   # Create new FastestCSV wrapping the specified IO object
   def initialize(io, _opts = {})
-    opts = {col_sep: ",", write_buffer_lines: DEFAULT_WRITE_BUFFER_LINES, force_utf8: false}.merge(_opts)
+
+    opts = {
+      col_sep: ",",
+      write_buffer_lines: DEFAULT_WRITE_BUFFER_LINES,
+      force_utf8: false
+    }.merge(_opts)
+
     @@separator = opts[:col_sep]
     @@quote_character = opts[:quote_character] || "\""
     @@write_buffer_lines = opts[:write_buffer_lines]
@@ -83,15 +93,16 @@ class FastestCSV
     @io = io
     @current_buffer_count = 0
     @current_write_buffer = ""
+
   end
-  
+
   # Read from the wrapped IO passing each line as array to the specified block
   def each
     while row = shift
       yield row
     end
   end
-  
+
   # Read all remaining lines from the wrapped IO into an array of arrays
   def read
     table = Array.new
@@ -160,7 +171,7 @@ class FastestCSV
     if str.count(COMMA) != n_elements - 1 or CsvParser.escapable_chars_not_comma?(str)
       str = "#{_array.map do |e|
         e = e.to_s
-        
+
         if CsvParser.escapable_chars_including_comma?(e)
           "\"#{e.gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4')}\""
         else
@@ -191,9 +202,10 @@ class FastestCSV
     if str.count(',') != n_elements - 1 or CsvParser.escapable_chars_not_comma?(str)
       str = "#{_array.map do |e|
         e = e.to_s
-        
+
         if CsvParser.escapable_chars_including_comma?(e)
-          "\"#{e.gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4')}\""
+          # "\"#{e.gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4')}\""
+          "\"#{e.gsub(/([^\\]|^)(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/([^\\]|^)(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/([^\"]|^)(\"(\"\")*)([^\"]|$)/, '\1\2"\4').gsub(/([^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4')}\""
         else
           e
         end
@@ -209,13 +221,13 @@ class FastestCSV
     # replace all instances of SEPARATOR_CHAR with COMMA and end an eol
     "#{str}\n"
   end
-  
+
   # Close the wrapped IO
   def close
     @io.write(@current_write_buffer) unless @current_write_buffer == ""
     @io.close
   end
-  
+
   def closed?
     @io.closed?
   end

@@ -2,8 +2,8 @@
 require 'minitest/autorun'
 require 'fastest_csv'
 
-# These tests invert the tests in tc_csv_parsing.rb. 
-# See comments in that file. 
+# These tests invert the tests in tc_csv_parsing.rb.
+# See comments in that file.
 
 class TestCSVWriting < Minitest::Test
 
@@ -46,7 +46,7 @@ class TestCSVWriting < Minitest::Test
       [";,;", [";", ";"]] ].each do |csv_test|
       assert_equal(csv_test.first + "\n", FastestCSV.to_csv(csv_test.last))
     end
-    
+
     [ ["foo,\"\"\"\"\"\",baz", ["foo", "\"\"", "baz"]],
       ["foo,\"\"\"bar\"\"\",baz", ["foo", "\"bar\"", "baz"]],
       ["foo,\"\r\n\",baz", ["foo", "\r\n", "baz"]],

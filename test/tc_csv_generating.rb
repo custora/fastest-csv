@@ -5,7 +5,7 @@ require 'fastest_csv'
 # These tests invert the tests in tc_csv_parsing.rb.
 # See comments in that file.
 
-class TestCSVWriting < Minitest::Test
+class TestCSVGenerating < Minitest::Test
 
   # Note that to_csv appends a newline, so we need to add that everywhere below
 
@@ -43,8 +43,10 @@ class TestCSVWriting < Minitest::Test
       ["foo,\"\r\n\r\",baz", ["foo", "\r\n\r", "baz"]],
       ["foo,\"\r\n\n\",baz", ["foo", "\r\n\n", "baz"]],
       ["foo,\"foo,bar\",baz", ["foo", "foo,bar", "baz"]],
-      [";,;", [";", ";"]] ].each do |csv_test|
-      assert_equal(csv_test.first + "\n", FastestCSV.to_csv(csv_test.last))
+      [";,;", [";", ";"]]
+    ].each do |csv_test|
+      # assert_equal(csv_test.first + "\n", FastestCSV.to_csv(csv_test.last))
+      assert_equal(csv_test.first, FastestCSV.generate_line(csv_test.last))
     end
 
     [ ["foo,\"\"\"\"\"\",baz", ["foo", "\"\"", "baz"]],
@@ -62,8 +64,10 @@ class TestCSVWriting < Minitest::Test
       ["foo,,baz", ["foo", nil, "baz"]],
       ["foo,bar", ["foo", "bar"]],
       ["foo,\"\r\n\n\",baz", ["foo", "\r\n\n", "baz"]],
-      ["foo,\"foo,bar\",baz", ["foo", "foo,bar", "baz"]] ].each do |csv_test|
-      assert_equal(csv_test.first + "\n", FastestCSV.to_csv(csv_test.last))
+      ["foo,\"foo,bar\",baz", ["foo", "foo,bar", "baz"]]
+    ].each do |csv_test|
+      # assert_equal(csv_test.first + "\n", FastestCSV.to_csv(csv_test.last))
+      assert_equal(csv_test.first, FastestCSV.generate_line(csv_test.last))
      end
   end
 
@@ -75,7 +79,7 @@ class TestCSVWriting < Minitest::Test
       [%Q{a,"\nb"""},         ["a", "\nb\""]],
       [%Q{a,"""\nb"},         ["a", "\"\nb"]],
       [%Q{a,"""\nb\n"""},     ["a", "\"\nb\n\""]],
-      [%Q{a,"""\nb\n""",\nc}, ["a", "\"\nb\n\"", nil]],
+      # [%Q{a,"""\nb\n""",\nc}, ["a", "\"\nb\n\"", nil]],  # originally this was a test to see if the c gets ignored when the newline is hit
       [%Q{a,,,},              ["a", nil, nil, nil]],
       [%Q{,},                 [nil, nil]],
       [%Q{"",""},             ["", ""]],
@@ -84,13 +88,16 @@ class TestCSVWriting < Minitest::Test
       [%Q{,""},               [nil,""]],
       [%Q{,"\r"},             [nil,"\r"]],
       [%Q{"\r\n,"},           ["\r\n,"]],
-      [%Q{"\r\n,",},          ["\r\n,", nil]] ].each do |edge_case|
-        assert_equal(edge_case.first + "\n", FastestCSV.to_csv(edge_case.last))
-      end
+      [%Q{"\r\n,",},          ["\r\n,", nil]]
+    ].each do |edge_case|
+      # assert_equal(edge_case.first + "\n", FastestCSV.to_csv(edge_case.last))
+      assert_equal(edge_case.first, FastestCSV.generate_line(edge_case.last))
+    end
   end
 
   def test_james_edge_cases
-    assert_equal("\n", FastestCSV.to_csv([]))
+    # assert_equal("\n", FastestCSV.to_csv([]))
+    assert_equal("", FastestCSV.generate_line([]))
   end
 
   def test_rob_edge_cases
@@ -105,7 +112,8 @@ class TestCSVWriting < Minitest::Test
       [%Q{"a\r\n\r\na","two CRLFs"},       ["a\r\n\r\na", 'two CRLFs']],
       [%Q{with blank,"start\n\nfinish"\n}, ['with blank', "start\n\nfinish"]],
     ].each do |edge_case|
-      assert_equal(edge_case.first + "\n", FastestCSV.to_csv(edge_case.last))
+      # assert_equal(edge_case.first + "\n", FastestCSV.to_csv(edge_case.last))
+      assert_equal(edge_case.first, FastestCSV.generate_line(edge_case.last))
     end
   end
 

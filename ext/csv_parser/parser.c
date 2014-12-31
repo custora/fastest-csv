@@ -21,30 +21,30 @@ static VALUE cFastestCSV;
 */
 static VALUE mCsvParser;
 
-static VALUE parse_line(VALUE self, VALUE str, VALUE sep, VALUE quote_char)
-{
-    if (NIL_P(str))
-        return Qnil;
-
-    const char *sepc = RSTRING_PTR(sep);
-    if (NIL_P(sepc))
-        return Qnil;
-
-    const char *quotec = RSTRING_PTR(quote_char);
-    if (NIL_P(quotec))
-        return Qnil;
-
-    const char *ptr = RSTRING_PTR(str);
-    int len = (int) RSTRING_LEN(str);  /* cast to prevent warning in 64-bit OS */
-    if (len == 0)
-        return Qnil;
+static VALUE parse_line(VALUE self, VALUE str, VALUE sep, VALUE quote_char) {
 
     VALUE array = rb_ary_new2(DEF_ARRAY_LEN);
-    char value[len];  /* field value, no longer than line */
     int state = 0;
     int index = 0;
     int i;
     char c;
+
+    const char *sepc = RSTRING_PTR(sep);
+    const char *quotec = RSTRING_PTR(quote_char);
+    const char *ptr = RSTRING_PTR(str);
+
+    int len = (int) RSTRING_LEN(str);  /* cast to prevent warning in 64-bit OS */
+    char value[len];  /* field value, no longer than line */
+
+    if (NIL_P(str))
+        return Qnil;
+    if (NIL_P(sepc))
+        return Qnil;
+    if (NIL_P(quotec))
+        return Qnil;
+
+    if (len == 0)
+        return Qnil;
 
     for (i = 0; i < len; i++)
     {
@@ -101,18 +101,25 @@ static VALUE parse_line(VALUE self, VALUE str, VALUE sep, VALUE quote_char)
 
 static VALUE generate_line(VALUE self, VALUE array, VALUE sep, VALUE quote_char, VALUE force_quote) {
 
+    char *c, *array_str_val, *converted_val;
+    int quoting;
+    long array_i, converted_i;
+    VALUE array_val, result;
+
     const char *sepc = RSTRING_PTR(sep);
+    const char *quotec = RSTRING_PTR(quote_char);
+
+    int force_q;
+
     if (NIL_P(sepc))
         return Qnil;
-
-    const char *quotec = RSTRING_PTR(quote_char);
     if (NIL_P(quotec))
         return Qnil;
 
     if (TYPE(array) != T_ARRAY)
         rb_raise(rb_eTypeError, "first argument must be an array");
 
-    int force_q;
+
     switch (force_quote) {
         case Qtrue:
             force_q = 1;
@@ -124,11 +131,6 @@ static VALUE generate_line(VALUE self, VALUE array, VALUE sep, VALUE quote_char,
             rb_raise(rb_eTypeError, "force_quote should be true or false");
             break;
     }
-
-    char *c, *array_str_val, *converted_val;
-    int quoting;
-    long array_i, converted_i;
-    VALUE array_val, result;
 
     result = rb_str_new_cstr("");
     for (array_i = 0; array_i < RARRAY_LEN(array); array_i++) {
@@ -218,11 +220,12 @@ static VALUE generate_line(VALUE self, VALUE array, VALUE sep, VALUE quote_char,
 
 static VALUE escapable_chars_including_comma(VALUE self, VALUE str)
 {
-    if (NIL_P(str))
-        return Qnil;
 
     const char *ptr = RSTRING_PTR(str);
     const char *e = RSTRING_END(str);
+
+    if (NIL_P(str))
+        return Qnil;
 
     while (ptr < e) {
         if(*ptr == ',' || *ptr == '"' || *ptr == '\\' || *ptr == '\n' || *ptr == '\r')
@@ -236,11 +239,12 @@ static VALUE escapable_chars_including_comma(VALUE self, VALUE str)
 
 static VALUE escapable_chars_not_comma(VALUE self, VALUE str)
 {
-    if (NIL_P(str))
-        return Qnil;
 
     const char *ptr = RSTRING_PTR(str);
     const char *e = RSTRING_END(str);
+
+    if (NIL_P(str))
+        return Qnil;
 
     while (ptr < e) {
         if(*ptr == '"' || *ptr == '\\' || *ptr == '\n' || *ptr == '\r')

@@ -40,8 +40,10 @@ Parse entire file
 
 Convert array to CSV
 
-    FastestCSV.generate_line(["1", "2", "\n", "3"])
+    FastestCSV.generate_line([1, 2, "\n", 3])  # tries to make arguments into strings
     => "1,2,\"\n\",3"
+    FastestCSV.generate_line([1, 2, nil, 3])   # nil becomes an empty field (and no quoting by default unless needed)
+    => "1,2,,3"
 
 Write array to CSV
 

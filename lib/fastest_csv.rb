@@ -71,8 +71,8 @@ class FastestCSV
     CsvParser.parse_line(line, _sep, _quote)
   end
 
-  def self.generate_line(line, _sep = ",", _quote = "\"", _force_quote = false)
-    CsvParser.generate_line(line, _sep, _quote, !!_force_quote)
+  def self.generate_line(data, _sep = ",", _quote = "\"", _force_quote = false)
+    CsvParser.generate_line(data.map{|x| x.nil? ? x : x.to_s}, _sep, _quote, !!_force_quote)
   end
 
   # Create new FastestCSV wrapping the specified IO object

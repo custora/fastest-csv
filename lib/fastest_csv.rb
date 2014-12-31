@@ -144,7 +144,11 @@ class FastestCSV
 
   def <<(_array)
     @current_buffer_count += 1
-    @current_write_buffer << to_csv(_array)
+    # @current_write_buffer << to_csv(_array)
+    # Below call to generate_line does NOT use @@separator or @@quote_character
+    # but only to ensure compatibility with to_csv. It seems like a good idea to
+    # change this at some point.
+    @current_write_buffer << FastestCSV.generate_line(_array, COMMA, '"') + "\n"
     if(@current_buffer_count == @@write_buffer_lines)
       flush(false)
     end

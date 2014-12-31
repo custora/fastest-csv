@@ -59,6 +59,8 @@ class TestCSVParsing < Minitest::Test
       assert_equal(csv_test.last, FastestCSV.parse_line(csv_test.first))
     end
 
+    # A lot of these appear to be dupes, sort them out at some point
+
     [ ["foo,\"\"\"\"\"\",baz", ["foo", "\"\"", "baz"]],
       ["foo,\"\"\"bar\"\"\",baz", ["foo", "\"bar\"", "baz"]],
       ["foo,\"\r\n\",baz", ["foo", "\r\n", "baz"]],

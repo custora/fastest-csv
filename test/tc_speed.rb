@@ -68,15 +68,22 @@ class TestCSVSpeed < Minitest::Test
     end
     csv_time = Time.now - csv_time
 
-    fastest_csv_time = Time.now
+    fastest_csv_to_csv_time = Time.now
     fastest_csv_data.each do |row|
       FastestCSV.to_csv(row)
+    end
+    fastest_csv_to_csv_time = Time.now - fastest_csv_to_csv_time
+
+    fastest_csv_time = Time.now
+    fastest_csv_data.each do |row|
+      FastestCSV.generate_line(row)
     end
     fastest_csv_time = Time.now - fastest_csv_time
 
     puts
     puts "CSV generate: #{csv_time}"
-    puts "FastestCSV generate: #{fastest_csv_time}"
+    puts "FastestCSV generate (to_csv): #{fastest_csv_to_csv_time}"
+    puts "FastestCSV generate (generate_line): #{fastest_csv_time}"
     puts
 
     assert(fastest_csv_time < csv_time / 3)

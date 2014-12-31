@@ -154,8 +154,9 @@ static VALUE generate_line(VALUE self, VALUE array, VALUE sep, VALUE quote_char,
 
             c = array_str_val;
             while (*c) {
-                /* if not quoting and quote_char or sep, need to start quoting */
-                if (!quoting && (*c == quotec[0] || *c == sepc[0])) {
+                /* if not quoting and quote_char, sep, or line break, we need to
+                 * start quoting */
+                if (!quoting && (*c == quotec[0] || *c == sepc[0] || *c == 13 || *c == 10)) {
                     quoting = 1;
                 }
                 /* if quote_char, dupe it */

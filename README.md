@@ -1,6 +1,6 @@
 # FastestCSV
 
-[![Build Status](https://travis-ci.org/custora/fastest-csv.svg?branch=unit-testing)](https://travis-ci.org/custora/fastest-csv)
+[![Build Status](https://travis-ci.org/custora/fastest-csv.svg?branch=master)](https://travis-ci.org/custora/fastest-csv)
 
 Fastest CSV class for MRI Ruby. Faster than faster_csv and fasterer-csv. On par with csvscan, but supports any delimiter and fast (buffered) writing of CSVs. Uses native C code to parse CSV lines in MRI Ruby. Java support is de facto deprecated as we don't use it and don't keep it updated.
 

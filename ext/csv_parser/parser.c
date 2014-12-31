@@ -103,7 +103,7 @@ static VALUE generate_line(VALUE self, VALUE array, VALUE sep, VALUE quote_char,
 
     char *c, *array_str_val, *converted_val;
     int quoting;
-    long array_i, converted_i;
+    long array_i, converted_i, array_str_val_len;
     VALUE array_val, result;
 
     const char *sepc = RSTRING_PTR(sep);
@@ -140,10 +140,14 @@ static VALUE generate_line(VALUE self, VALUE array, VALUE sep, VALUE quote_char,
 
         if (TYPE(array_val) == T_STRING || TYPE(array_val) == T_NIL) {
 
-            if (TYPE(array_val) == T_STRING)
+            if (TYPE(array_val) == T_STRING) {
                 array_str_val = StringValueCStr(array_val);
-            else
+                array_str_val_len = RSTRING_LEN(array_val) + 1;
+            }
+            else {
                 array_str_val = "";
+                array_str_val_len = 1;
+            }
 
             /* malloc: at most
              *   2*(length-1) (every character doubled except null terminator)
@@ -151,7 +155,10 @@ static VALUE generate_line(VALUE self, VALUE array, VALUE sep, VALUE quote_char,
              *   + 1 (possible leading separator char)
              */
 
-            converted_val = (char *)malloc(sizeof(array_str_val) * 2 + 1);
+            converted_val = (char *)malloc(array_str_val_len * sizeof(char) * 2 + 1);
+            if (converted_val == NULL)
+                rb_raise(rb_eNoMemError, "could not allocate memory for converted_val");
+
             converted_i = 2;
 
             c = array_str_val;

@@ -237,10 +237,10 @@ class FastestCSV
   end
 end
 
-class String
-  # Equivalent to <tt>FasterCSV::parse_line(self)</tt>
-  def parse_csv
-    CsvParser.parse_line(self, @@separator, @@quote_character)
-  end
-end
+# class String
+#   # Equivalent to <tt>FasterCSV::parse_line(self)</tt>
+#   def parse_csv
+#     CsvParser.parse_line(self, @@separator, @@quote_character)
+#   end
+# end
 

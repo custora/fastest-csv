@@ -4,7 +4,7 @@
 
 Fastest CSV class for MRI Ruby. Faster than faster_csv and fasterer-csv. On par with csvscan, but supports any delimiter and fast (buffered) writing of CSVs. Uses native C code to parse CSV lines in MRI Ruby. Java support is de facto deprecated as we don't use it and don't keep it updated.
 
-Supports standard CSV according to [RFC4180](https://tools.ietf.org/html/rfc4180), with the exception that it permits the delimiter and field separators to be redefined (COMMA and DQUOTE in the RFC4180 grammar, respectively). Not designed to support Excel CSVs.
+Supports standard CSV according to [RFC4180](https://tools.ietf.org/html/rfc4180), with the exception that it permits the field enclosers and separators to be redefined (DQUOTE and COMMA in the RFC4180 grammar). Not designed to support Excel CSVs.
 
 The interface is a subset of the CSV interface in Ruby 1.9.3. The options parameter only accepts col_sep and write_buffer_lines.
 

@@ -125,33 +125,34 @@ static VALUE generate_line(VALUE self, VALUE array, VALUE sep, VALUE quote_char,
             break;
     }
 
-    char *line = (char *)malloc(100 * sizeof(char)); /* fix this */
-    if (line == NULL)
-        rb_raise(rb_eNoMemError, "could not allocate memory for new line");
-
-    char *c, *array_str_val, *unquoted_val;
+    char *c, *array_str_val, *converted_val;
     int quoting;
-    long i, len, unquoted_len;
+    long array_i, converted_i;
     VALUE array_val, result;
 
-    len = 0;
-    for (i = 0; i < RARRAY_LEN(array); i++) {
-
-        if (i > 0) {
-            line[len] = sepc[0];
-            len += 1;
-        }
+    result = rb_str_new_cstr("");
+    for (array_i = 0; array_i < RARRAY_LEN(array); array_i++) {
 
         quoting = force_q;
-        array_val = rb_ary_entry(array, i);
+        array_val = rb_ary_entry(array, array_i);
 
-        if (TYPE(array_val) == T_STRING) {
+        if (TYPE(array_val) == T_STRING || TYPE(array_val) == T_NIL) {
 
-            array_str_val = StringValueCStr(array_val);
-            unquoted_val = (char *)malloc(sizeof(array_str_val) * 2 + 1);  /* at most 2*length (every character doubled) + 2 (delims) - 1 (null terminator not duped) */
-            unquoted_len = 0;
+            if (TYPE(array_val) == T_STRING)
+                array_str_val = StringValueCStr(array_val);
+            else
+                array_str_val = "";
+
+            /* malloc: at most
+             *   2*(length-1) (every character doubled except null terminator)
+             *   + 2 (delims)
+             *   + 1 (possible leading separator char)
+             */
+
+            converted_val = (char *)malloc(sizeof(array_str_val) * 2 + 1);
+            converted_i = 2;
+
             c = array_str_val;
-
             while (*c) {
                 /* if not quoting and quote_char or sep, need to start quoting */
                 if (!quoting && (*c == quotec[0] || *c == sepc[0])) {
@@ -159,51 +160,56 @@ static VALUE generate_line(VALUE self, VALUE array, VALUE sep, VALUE quote_char,
                 }
                 /* if quote_char, dupe it */
                 if (*c == quotec[0]) {
-                    unquoted_val[unquoted_len] = *c;
-                    unquoted_val[unquoted_len+1] = *c;
-                    unquoted_len += 2;
+                    converted_val[converted_i] = *c;
+                    converted_val[converted_i+1] = *c;
+                    converted_i += 2;
                 }
                 /* else just add it */
                 else {
-                    unquoted_val[unquoted_len] = *c;
-                    unquoted_len += 1;
+                    converted_val[converted_i] = *c;
+                    converted_i += 1;
                 }
                 c++;
             }
-            unquoted_val[unquoted_len] = '\0';
+            converted_val[converted_i] = '\0';
+
+            /* depending on quoting and whether or not we need to append the
+             * leading separator, strcpy from different points in converted_val
+             */
 
             if (quoting) {
-                line[len] = quotec[0];
-                strcpy(&line[len+1], unquoted_val);
-                line[len+unquoted_len+1] = quotec[0];
-                len += unquoted_len+2;
+                converted_val[1] = quotec[0];
+                converted_val[converted_i] = quotec[0];
+                converted_val[converted_i+1] = '\0';
+                if (array_i > 0) {
+                    converted_val[0] = sepc[0];
+                    result = rb_str_cat2(result, converted_val);
+                }
+                else {
+                    result = rb_str_cat2(result, &converted_val[1]);
+                }
+
             }
             else {
-                strcpy(&line[len], unquoted_val);
-                len += unquoted_len;
+                converted_val[converted_i] = '\0';
+                if (array_i > 0) {
+                    converted_val[1] = sepc[0];
+                    result = rb_str_cat2(result, &converted_val[1]);
+                }
+                else {
+                    result = rb_str_cat2(result, &converted_val[2]);
+                }
             }
 
-            free(unquoted_val);
+            free(converted_val);
 
         }
 
-        else if (TYPE(array_val) == T_NIL) {
-            /* output either nothing or just the separators */
-            if (quoting) {
-                line[len] = quote_char;
-                line[len+1] = quote_char;
-                len += 2;
-            }
-        }
         else {
             rb_raise(rb_eTypeError, "array should only contain strings or nil");
         }
 
     }
-
-    line[len] = '\0';
-    result = rb_str_new(line, len);
-    free(line);
 
     return result;
 

@@ -34,7 +34,9 @@ static VALUE parse_line(VALUE self, VALUE str, VALUE sep, VALUE quote_char) {
     const char *ptr = RSTRING_PTR(str);
 
     int len = (int) RSTRING_LEN(str);  /* cast to prevent warning in 64-bit OS */
-    char value[len];  /* field value, no longer than line */
+    char *value = (char *)malloc(len * sizeof(char) + 1);
+    if (value == NULL)
+        rb_raise(rb_eNoMemError, "could not allocate memory for parsed field value");
 
     if (NIL_P(str))
         return Qnil;
@@ -96,6 +98,8 @@ static VALUE parse_line(VALUE self, VALUE str, VALUE sep, VALUE quote_char) {
     else if (state == QUOTE_IN_QUOTED) {
         rb_ary_push(array, rb_str_new(value, index));
     }
+
+    free(value);
     return array;
 }
 
@@ -157,7 +161,7 @@ static VALUE generate_line(VALUE self, VALUE array, VALUE sep, VALUE quote_char,
 
             converted_val = (char *)malloc(array_str_val_len * sizeof(char) * 2 + 1);
             if (converted_val == NULL)
-                rb_raise(rb_eNoMemError, "could not allocate memory for converted_val");
+                rb_raise(rb_eNoMemError, "could not allocate memory for converted field value");
 
             converted_i = 2;
 

@@ -95,7 +95,7 @@ class FastestCSV
     if (_fieldsep == _fieldencl)
       raise "separator and encloser characters cannot be the same"
     end
-    CsvParser.generate_line(data.map{|x| x.nil? ? x : x.to_s}, _fieldsep, _fieldencl, !!_force_quote)
+    CsvParser.generate_line(data.map{|x| x.nil? ? x : x.to_s}, _fieldsep, _fieldencl, !!_force_quote) + "\n"
   end
 
   # Create new FastestCSV wrapping the specified IO object
@@ -169,7 +169,7 @@ class FastestCSV
     # Below call to generate_line does NOT use @@separator or @@quote_character
     # but only to ensure compatibility with old versions of the code. It seems 
     # like a good idea to change this at some point.
-    @current_write_buffer << FastestCSV.generate_line(_array, FIELDSEP, '"') + "\n"
+    @current_write_buffer << FastestCSV.generate_line(_array, FIELDSEP, '"')
     if(@current_buffer_count == @@write_buffer_lines)
       flush(false)
     end

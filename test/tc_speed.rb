@@ -18,9 +18,10 @@ class TestCSVSpeed < Minitest::Test
 
   def test_that_we_are_doing_the_same_work
 
-    FastestCSV.foreach(PATH) do |fastest_row|
+    FastestCSV.open(PATH) do |fcsv|
       CSV.foreach(PATH) do |csv_row|
 
+        fastest_row = fcsv.shift
         assert_equal(csv_row, fastest_row)
 
         # FastestCSV does not quote empty elements, need to do this to force CSV to do the same

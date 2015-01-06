@@ -18,12 +18,16 @@ class TestCSVSpeed < Minitest::Test
 
   def test_that_we_are_doing_the_same_work
 
-    FastestCSV.open(PATH) do |csv|
-      CSV.foreach(PATH) do |row|
-        fastest_row = csv.shift
-        assert_equal(row, fastest_row)
-        nilled_row = row.map{|x| x == '' ? nil : x }  # FastestCSV does not quote empty elements, need to do this to force CSV to do the same
-        assert_equal(CSV.generate_line(nilled_row), FastestCSV.to_csv(fastest_row))
+    FastestCSV.foreach(PATH) do |fastest_row|
+      CSV.foreach(PATH) do |csv_row|
+
+        assert_equal(csv_row, fastest_row)
+
+        # FastestCSV does not quote empty elements, need to do this to force CSV to do the same
+        nilled_row = fastest_row.map{|x| x == '' ? nil : x }
+        assert_equal(CSV.generate_line(nilled_row), 
+                     FastestCSV.generate_line(fastest_row))
+
       end
     end
 
@@ -68,12 +72,6 @@ class TestCSVSpeed < Minitest::Test
     end
     csv_time = Time.now - csv_time
 
-    fastest_csv_to_csv_time = Time.now
-    fastest_csv_data.each do |row|
-      FastestCSV.to_csv(row)
-    end
-    fastest_csv_to_csv_time = Time.now - fastest_csv_to_csv_time
-
     fastest_csv_time = Time.now
     fastest_csv_data.each do |row|
       FastestCSV.generate_line(row)
@@ -82,7 +80,6 @@ class TestCSVSpeed < Minitest::Test
 
     puts
     puts "CSV generate: #{csv_time}"
-    puts "FastestCSV generate (to_csv): #{fastest_csv_to_csv_time}"
     puts "FastestCSV generate (generate_line): #{fastest_csv_time}"
     puts
 

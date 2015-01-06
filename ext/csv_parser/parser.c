@@ -165,7 +165,8 @@ static VALUE generate_line(VALUE self, VALUE array, VALUE sep, VALUE quote_char,
             c = array_str_val;
             while (*c) {
                 /* if not quoting and quote_char, sep, or line break, we need to
-                 * start quoting */
+                 * start quoting 
+                 */
                 if (!quoting && (*c == quotec[0] || *c == sepc[0] || *c == 13 || *c == 10)) {
                     quoting = 1;
                 }
@@ -226,49 +227,9 @@ static VALUE generate_line(VALUE self, VALUE array, VALUE sep, VALUE quote_char,
 
 }
 
-static VALUE escapable_chars_including_comma(VALUE self, VALUE str)
-{
-
-    const char *ptr = RSTRING_PTR(str);
-    const char *e = RSTRING_END(str);
-
-    if (NIL_P(str))
-        return Qnil;
-
-    while (ptr < e) {
-        if(*ptr == ',' || *ptr == '"' || *ptr == '\\' || *ptr == '\n' || *ptr == '\r')
-            return Qtrue;
-
-        ptr++;
-    }
-
-    return Qfalse;
-}
-
-static VALUE escapable_chars_not_comma(VALUE self, VALUE str)
-{
-
-    const char *ptr = RSTRING_PTR(str);
-    const char *e = RSTRING_END(str);
-
-    if (NIL_P(str))
-        return Qnil;
-
-    while (ptr < e) {
-        if(*ptr == '"' || *ptr == '\\' || *ptr == '\n' || *ptr == '\r')
-            return Qtrue;
-
-        ptr++;
-    }
-
-    return Qfalse;
-}
-
 void Init_csv_parser()
 {
     mCsvParser = rb_define_module("CsvParser");
     rb_define_module_function(mCsvParser, "parse_line", parse_line, 3);
     rb_define_module_function(mCsvParser, "generate_line", generate_line, 4);
-    rb_define_module_function(mCsvParser, "escapable_chars_including_comma?", escapable_chars_including_comma, 1);
-    rb_define_module_function(mCsvParser, "escapable_chars_not_comma?", escapable_chars_not_comma, 1);
 }

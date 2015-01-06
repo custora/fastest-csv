@@ -166,10 +166,9 @@ class FastestCSV
 
   def <<(_array)
     @current_buffer_count += 1
-    # @current_write_buffer << to_csv(_array)
     # Below call to generate_line does NOT use @@separator or @@quote_character
-    # but only to ensure compatibility with to_csv. It seems like a good idea to
-    # change this at some point.
+    # but only to ensure compatibility with old versions of the code. It seems 
+    # like a good idea to change this at some point.
     @current_write_buffer << FastestCSV.generate_line(_array, FIELDSEP, '"') + "\n"
     if(@current_buffer_count == @@write_buffer_lines)
       flush(false)
@@ -186,68 +185,6 @@ class FastestCSV
     @current_buffer_count = 0
   end
 
-  def to_csv(_array)
-    n_elements = _array.length
-
-    # join all of the fields using a "weird" separator that should not appear in a CSV file
-    str = "#{_array.join(FIELDSEP)}"
-
-    # check if we have too many commas now, or any non-comma escapable chars; if we do, we need to scan each element
-    # and surround the offending one with quotation marks
-    if str.count(FIELDSEP) != n_elements - 1 or CsvParser.escapable_chars_not_comma?(str)
-      str = "#{_array.map do |e|
-        e = e.to_s
-
-        if CsvParser.escapable_chars_including_comma?(e)
-          "\"#{e.gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4')}\""
-        else
-          e
-        end
-      end.join(FIELDSEP)}"
-    end
-
-    # check for proper encoding and encode string if needed
-    if(@@encode &&
-      ((Encoding::US_ASCII != str.encoding) && (Encoding::UTF_8 != str.encoding) &&
-        (Encoding::ASCII_8BIT != str.encoding) || !str.valid_encoding?))
-        str.encode!(UTF_8_STRING, BINARY_STRING, invalid: :replace, undef: :replace, replace: SINGLE_SPACE)
-    end
-
-    # replace all instances of SEPARATOR_CHAR with FIELDSEP and end an eol
-    "#{str}\n"
-  end
-
-  def self.to_csv(_array, _force_utf_8 = false)
-    n_elements = _array.length
-
-    # join all of the fields using a "weird" separator that should not appear in a CSV file
-    str = "#{_array.join(FIELDSEP)}"
-
-    # check if we have too many commas now, or any non-comma escapable chars; if we do, we need to scan each element
-    # and surround the offending one with quotation marks
-    if str.count(',') != n_elements - 1 or CsvParser.escapable_chars_not_comma?(str)
-      str = "#{_array.map do |e|
-        e = e.to_s
-
-        if CsvParser.escapable_chars_including_comma?(e)
-          # "\"#{e.gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\\])(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4').gsub(/(^|[^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4')}\""
-          "\"#{e.gsub(/([^\\]|^)(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/([^\\]|^)(\\(\\\\)*)([^\\]|$)/, '\1\2\\\\\4').gsub(/([^\"]|^)(\"(\"\")*)([^\"]|$)/, '\1\2"\4').gsub(/([^\"])(\"(\"\")*)([^\"]|$)/, '\1\2"\4')}\""
-        else
-          e
-        end
-      end.join(FIELDSEP)}"
-    end
-
-    # check for proper encoding and encode string if needed
-    if(_force_utf_8 &&
-      ((Encoding::US_ASCII != str.encoding) && (Encoding::UTF_8 != str.encoding) &&
-        (Encoding::ASCII_8BIT != str.encoding) || !str.valid_encoding?))
-        str.encode!(UTF_8_STRING, BINARY_STRING, invalid: :replace, undef: :replace, replace: SINGLE_SPACE)
-    end
-    # replace all instances of SEPARATOR_CHAR with FIELDSEP and end an eol
-    "#{str}\n"
-  end
-
   # Close the wrapped IO
   def close
     @io.write(@current_write_buffer) unless @current_write_buffer == ""
@@ -257,12 +194,5 @@ class FastestCSV
   def closed?
     @io.closed?
   end
+
 end
-
-# class String
-#   # Equivalent to <tt>FasterCSV::parse_line(self)</tt>
-#   def parse_csv
-#     CsvParser.parse_line(self, @@separator, @@quote_character)
-#   end
-# end
-

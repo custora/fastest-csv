@@ -1,7 +1,7 @@
 
 [RFC 4180](https://tools.ietf.org/html/rfc4180) defines a standard and a grammar for CSVs. This gem implements an extended version of RFC 4180 that permits certain characters to be changed. For example, the user can configure which characters separate or enclose fields. 
 
-The RFC 4180 ABNF grammar, using the syntax in [RFC 5234](https://tools.ietf.org/html/rfc5234) is reproduced below: 
+The RFC 4180 ABNF grammar, using the syntax in [RFC 5234](https://tools.ietf.org/html/rfc5234), is reproduced below: 
 
     file = [header CRLF] record *(CRLF record) [CRLF]
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Maarten Oelering, BrightCode BV
+ * See LICENSE file for full copyright info
  */
 
 #include "ruby.h"
@@ -16,9 +16,6 @@
 #define IN_QUOTED 1
 #define QUOTE_IN_QUOTED 2
 
-/*
-static VALUE cFastestCSV;
-*/
 static VALUE mCsvParser;
 
 static VALUE parse_line(VALUE self, VALUE str, VALUE sep, VALUE quote_char) {
@@ -269,10 +266,6 @@ static VALUE escapable_chars_not_comma(VALUE self, VALUE str)
 
 void Init_csv_parser()
 {
-    /*
-    cFastestCSV = rb_define_class("FastestCSV", rb_cObject);
-    rb_define_singleton_method(cFastestCSV, "parse_line", parse_line, 1);
-    */
     mCsvParser = rb_define_module("CsvParser");
     rb_define_module_function(mCsvParser, "parse_line", parse_line, 3);
     rb_define_module_function(mCsvParser, "generate_line", generate_line, 4);

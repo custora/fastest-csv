@@ -5,12 +5,17 @@ require 'stringio'
 
 # Fast CSV parser using native code
 class FastestCSV
+
   DEFAULT_WRITE_BUFFER_LINES = 250_000
   UTF_8_STRING = "UTF-8"
   BINARY_STRING = "binary"
   SINGLE_SPACE = ' '
-  COMMA = ","
-  ESCAPED_QUOTE = "\""
+
+  # See grammar.md; these are default values
+
+  FIELDSEP = ","
+  FIELDENCL = "\""
+  LINEBREAK = "\n"
 
   #if RUBY_PLATFORM =~ /java/
   #  require 'jruby'
@@ -67,25 +72,42 @@ class FastestCSV
     end
   end
 
-  def self.parse_line(line, _sep = ",", _quote = "\"")
-    CsvParser.parse_line(line, _sep, _quote)
+  def self.parse_line(line, _fieldsep = FIELDSEP, _fieldencl = FIELDENCL)
+    if !((_fieldsep.is_a? String) && _fieldsep.length == 1)
+      raise "separator character must be a string of length 1"
+    end
+    if !((_fieldencl.is_a? String) && _fieldencl.length == 1)
+      raise "encloser character must be a string of length 1"
+    end
+    if (_fieldsep == _fieldencl)
+      raise "separator and encloser characters cannot be the same"
+    end
+    CsvParser.parse_line(line, _fieldsep, _fieldencl)
   end
 
-  def self.generate_line(data, _sep = ",", _quote = "\"", _force_quote = false)
-    CsvParser.generate_line(data.map{|x| x.nil? ? x : x.to_s}, _sep, _quote, !!_force_quote)
+  def self.generate_line(data, _fieldsep = FIELDSEP, _fieldencl = FIELDENCL, _force_quote = false)
+    if !((_fieldsep.is_a? String) && _fieldsep.length == 1)
+      raise "separator character must be a string of length 1"
+    end
+    if !((_fieldencl.is_a? String) && _fieldencl.length == 1)
+      raise "encloser character must be a string of length 1"
+    end
+    if (_fieldsep == _fieldencl)
+      raise "separator and encloser characters cannot be the same"
+    end
+    CsvParser.generate_line(data.map{|x| x.nil? ? x : x.to_s}, _fieldsep, _fieldencl, !!_force_quote)
   end
 
   # Create new FastestCSV wrapping the specified IO object
   def initialize(io, _opts = {})
 
     opts = {
-      col_sep: ",",
       write_buffer_lines: DEFAULT_WRITE_BUFFER_LINES,
       force_utf8: false
     }.merge(_opts)
 
-    @@separator = opts[:col_sep]
-    @@quote_character = opts[:quote_character] || "\""
+    @@separator = opts[:col_sep] || FIELDSEP
+    @@quote_character = opts[:quote_character] || FIELDENCL
     @@write_buffer_lines = opts[:write_buffer_lines]
     @@linebreak = opts[:line_break] || "\n"
     @@encode = opts[:force_utf8]
@@ -148,7 +170,7 @@ class FastestCSV
     # Below call to generate_line does NOT use @@separator or @@quote_character
     # but only to ensure compatibility with to_csv. It seems like a good idea to
     # change this at some point.
-    @current_write_buffer << FastestCSV.generate_line(_array, COMMA, '"') + "\n"
+    @current_write_buffer << FastestCSV.generate_line(_array, FIELDSEP, '"') + "\n"
     if(@current_buffer_count == @@write_buffer_lines)
       flush(false)
     end
@@ -168,11 +190,11 @@ class FastestCSV
     n_elements = _array.length
 
     # join all of the fields using a "weird" separator that should not appear in a CSV file
-    str = "#{_array.join(COMMA)}"
+    str = "#{_array.join(FIELDSEP)}"
 
     # check if we have too many commas now, or any non-comma escapable chars; if we do, we need to scan each element
     # and surround the offending one with quotation marks
-    if str.count(COMMA) != n_elements - 1 or CsvParser.escapable_chars_not_comma?(str)
+    if str.count(FIELDSEP) != n_elements - 1 or CsvParser.escapable_chars_not_comma?(str)
       str = "#{_array.map do |e|
         e = e.to_s
 
@@ -181,7 +203,7 @@ class FastestCSV
         else
           e
         end
-      end.join(COMMA)}"
+      end.join(FIELDSEP)}"
     end
 
     # check for proper encoding and encode string if needed
@@ -191,7 +213,7 @@ class FastestCSV
         str.encode!(UTF_8_STRING, BINARY_STRING, invalid: :replace, undef: :replace, replace: SINGLE_SPACE)
     end
 
-    # replace all instances of SEPARATOR_CHAR with COMMA and end an eol
+    # replace all instances of SEPARATOR_CHAR with FIELDSEP and end an eol
     "#{str}\n"
   end
 
@@ -199,7 +221,7 @@ class FastestCSV
     n_elements = _array.length
 
     # join all of the fields using a "weird" separator that should not appear in a CSV file
-    str = "#{_array.join(COMMA)}"
+    str = "#{_array.join(FIELDSEP)}"
 
     # check if we have too many commas now, or any non-comma escapable chars; if we do, we need to scan each element
     # and surround the offending one with quotation marks
@@ -213,7 +235,7 @@ class FastestCSV
         else
           e
         end
-      end.join(COMMA)}"
+      end.join(FIELDSEP)}"
     end
 
     # check for proper encoding and encode string if needed
@@ -222,7 +244,7 @@ class FastestCSV
         (Encoding::ASCII_8BIT != str.encoding) || !str.valid_encoding?))
         str.encode!(UTF_8_STRING, BINARY_STRING, invalid: :replace, undef: :replace, replace: SINGLE_SPACE)
     end
-    # replace all instances of SEPARATOR_CHAR with COMMA and end an eol
+    # replace all instances of SEPARATOR_CHAR with FIELDSEP and end an eol
     "#{str}\n"
   end
 

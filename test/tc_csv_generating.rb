@@ -16,10 +16,8 @@ class TestCSVGenerating < Minitest::Test
   def test_mastering_regex_example
     line = [ "Ten Thousand", "10000", " 2710 ", nil, "10,000",
              "It's \"10 Grand\", baby", "10K" ]
-    # assert_equal( FastestCSV.to_csv(line),
-    #               %Q{Ten Thousand,10000, 2710 ,,"10,000","It's ""10 Grand"", baby",10K\n} )
     assert_equal( FastestCSV.generate_line(line),
-                  %Q{Ten Thousand,10000, 2710 ,,"10,000","It's ""10 Grand"", baby",10K} )
+                  %Q{Ten Thousand,10000, 2710 ,,"10,000","It's ""10 Grand"", baby",10K\n} )
   end
 
   def test_std_lib_csv
@@ -56,8 +54,7 @@ class TestCSVGenerating < Minitest::Test
       ["foo,\"foo,bar\",baz", ["foo", "foo,bar", "baz"]],
       [";,;", [";", ";"]]
     ].each do |csv_test|
-      # assert_equal(csv_test.first + "\n", FastestCSV.to_csv(csv_test.last))
-      assert_equal(csv_test.first, FastestCSV.generate_line(csv_test.last))
+      assert_equal(csv_test.first + "\n", FastestCSV.generate_line(csv_test.last))
     end
 
     # A lot of these appear to be dupes, sort them out at some point
@@ -81,8 +78,7 @@ class TestCSVGenerating < Minitest::Test
       ["foo,\"\r\n\n\",baz", ["foo", "\r\n\n", "baz"]],
       ["foo,\"foo,bar\",baz", ["foo", "foo,bar", "baz"]]
     ].each do |csv_test|
-      # assert_equal(csv_test.first + "\n", FastestCSV.to_csv(csv_test.last))
-      assert_equal(csv_test.first, FastestCSV.generate_line(csv_test.last))
+      assert_equal(csv_test.first + "\n", FastestCSV.generate_line(csv_test.last))
      end
   end
 
@@ -112,14 +108,12 @@ class TestCSVGenerating < Minitest::Test
       [%Q{"\r\n,"},           ["\r\n,"]],
       [%Q{"\r\n,",},          ["\r\n,", nil]]
     ].each do |edge_case|
-      # assert_equal(edge_case.first + "\n", FastestCSV.to_csv(edge_case.last))
-      assert_equal(edge_case.first, FastestCSV.generate_line(edge_case.last))
+      assert_equal(edge_case.first + "\n", FastestCSV.generate_line(edge_case.last))
     end
   end
 
   def test_james_edge_cases
-    # assert_equal("\n", FastestCSV.to_csv([]))
-    assert_equal("", FastestCSV.generate_line([]))
+    assert_equal("\n", FastestCSV.generate_line([]))
   end
 
   def test_rob_edge_cases
@@ -144,8 +138,7 @@ class TestCSVGenerating < Minitest::Test
       # [%Q{with blank,"start\n\nfinish"\n}, ['with blank', "start\n\nfinish"]],
       [%Q{with blank,"start\n\nfinish",}, ['with blank', "start\n\nfinish", ""]],
     ].each do |edge_case|
-      # assert_equal(edge_case.first + "\n", FastestCSV.to_csv(edge_case.last))
-      assert_equal(edge_case.first, FastestCSV.generate_line(edge_case.last))
+      assert_equal(edge_case.first + "\n", FastestCSV.generate_line(edge_case.last))
     end
   end
 

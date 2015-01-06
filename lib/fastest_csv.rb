@@ -72,7 +72,7 @@ class FastestCSV
   end
 
   def self.generate_line(data, _sep = ",", _quote = "\"", _force_quote = false)
-    CsvParser.generate_line(data.map{|x| x.nil? ? x : x.to_s}, _sep, _quote, !!_force_quote)
+    CsvParser.generate_line(data.map{|x| x.nil? ? x : x.to_s}, _sep, _quote, !!_force_quote) + "\n"
   end
 
   # Create new FastestCSV wrapping the specified IO object
@@ -148,7 +148,7 @@ class FastestCSV
     # Below call to generate_line does NOT use @@separator or @@quote_character
     # but only to ensure compatibility with to_csv. It seems like a good idea to
     # change this at some point.
-    @current_write_buffer << FastestCSV.generate_line(_array, COMMA, '"') + "\n"
+    @current_write_buffer << FastestCSV.generate_line(_array, COMMA, '"')
     if(@current_buffer_count == @@write_buffer_lines)
       flush(false)
     end

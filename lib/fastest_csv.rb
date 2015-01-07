@@ -13,9 +13,9 @@ class FastestCSV
 
   # See grammar.md; these are default values
 
-  FIELDSEP = ","
-  FIELDENCL = "\""
-  LINEBREAK = "\n"
+  DEFAULT_FIELDSEP = ","
+  DEFAULT_FIELDQUOTE = "\""
+  DEFAULT_LINEBREAK = "\n"
 
   #if RUBY_PLATFORM =~ /java/
   #  require 'jruby'
@@ -24,6 +24,22 @@ class FastestCSV
 
   def self.version
     VERSION
+  end
+
+  def self.assert_valid_grammar(_fieldsep, _fieldquote, _linebreak)
+    if !((_fieldsep.is_a? String) && _fieldsep.length == 1)
+      raise "separator character must be a string of length 1"
+    end
+    if !((_fieldquote.is_a? String) && _fieldquote.length == 1)
+      raise "quote character must be a string of length 1"
+    end
+    if !(["\r", "\n", "\r\n"].include? _linebreak)
+      raise "linebreak must be CR, LF, or CR LF"
+    end
+    if (_fieldsep == _fieldquote)
+      raise "separator and quote characters cannot be the same"
+    end
+    true
   end
 
   # Pass each line of the specified +path+ as array to the provided +block+
@@ -72,30 +88,32 @@ class FastestCSV
     end
   end
 
-  def self.parse_line(line, _fieldsep = FIELDSEP, _fieldencl = FIELDENCL)
-    if !((_fieldsep.is_a? String) && _fieldsep.length == 1)
-      raise "separator character must be a string of length 1"
-    end
-    if !((_fieldencl.is_a? String) && _fieldencl.length == 1)
-      raise "encloser character must be a string of length 1"
-    end
-    if (_fieldsep == _fieldencl)
-      raise "separator and encloser characters cannot be the same"
-    end
-    CsvParser.parse_line(line, _fieldsep, _fieldencl)
+  def self.parse_line(line, _opts = {})
+    _opts = {
+      col_sep:    DEFAULT_FIELDSEP,
+      row_sep:    DEFAULT_LINEBREAK,
+      quote_char: DEFAULT_FIELDQUOTE,
+    }.merge(_opts)
+    assert_valid_grammar(_opts[:col_sep], _opts[:quote_char], _opts[:row_sep])
+    CsvParser.parse_line(line,
+                         _opts[:col_sep],
+                         _opts[:quote_char],
+                         _opts[:row_sep])
   end
 
-  def self.generate_line(data, _fieldsep = FIELDSEP, _fieldencl = FIELDENCL, _force_quote = false)
-    if !((_fieldsep.is_a? String) && _fieldsep.length == 1)
-      raise "separator character must be a string of length 1"
-    end
-    if !((_fieldencl.is_a? String) && _fieldencl.length == 1)
-      raise "encloser character must be a string of length 1"
-    end
-    if (_fieldsep == _fieldencl)
-      raise "separator and encloser characters cannot be the same"
-    end
-    CsvParser.generate_line(data.map{|x| x.nil? ? x : x.to_s}, _fieldsep, _fieldencl, !!_force_quote) + "\n"
+  def self.generate_line(data, _opts = {})
+    _opts = {
+      col_sep:    DEFAULT_FIELDSEP,
+      row_sep:    DEFAULT_LINEBREAK,
+      quote_char: DEFAULT_FIELDQUOTE,
+      force_quote: false,
+    }.merge(_opts)
+    assert_valid_grammar(_opts[:col_sep], _opts[:quote_char], _opts[:row_sep])
+    CsvParser.generate_line(data.map{|x| x.nil? ? x : x.to_s},
+                            _opts[:col_sep],
+                            _opts[:quote_char],
+                            _opts[:row_sep],
+                            !!_opts[:force_quote]) + _opts[:row_sep]
   end
 
   # Create new FastestCSV wrapping the specified IO object
@@ -106,10 +124,10 @@ class FastestCSV
       force_utf8: false
     }.merge(_opts)
 
-    @@separator = opts[:col_sep] || FIELDSEP
-    @@quote_character = opts[:quote_character] || FIELDENCL
+    @@separator = opts[:col_sep] || DEFAULT_FIELDSEP
+    @@quote_character = opts[:quote_character] || DEFAULT_FIELDQUOTE
     @@write_buffer_lines = opts[:write_buffer_lines]
-    @@linebreak = opts[:line_break] || "\n"
+    @@linebreak = opts[:line_break] || DEFAULT_LINEBREAK
     @@encode = opts[:force_utf8]
 
     @io = io
@@ -167,9 +185,9 @@ class FastestCSV
   def <<(_array)
     @current_buffer_count += 1
     # Below call to generate_line does NOT use @@separator or @@quote_character
-    # but only to ensure compatibility with old versions of the code. It seems 
+    # but only to ensure compatibility with old versions of the code. It seems
     # like a good idea to change this at some point.
-    @current_write_buffer << FastestCSV.generate_line(_array, FIELDSEP, '"')
+    @current_write_buffer << FastestCSV.generate_line(_array, DEFAULT_FIELDSEP, DEFAULT_FIELDQUOTE)
     if(@current_buffer_count == @@write_buffer_lines)
       flush(false)
     end

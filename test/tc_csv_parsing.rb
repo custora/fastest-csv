@@ -8,6 +8,7 @@
 
 require 'minitest/autorun'
 require 'fastest_csv'
+require 'csv'
 
 class TestCSVParsing < Minitest::Test
 
@@ -21,37 +22,43 @@ class TestCSVParsing < Minitest::Test
       %Q{Ten Thousand;10000; 2710 ;;"10,000";"It's ""10 Grand"", baby";10K\n},
       [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", baby", "10K" ]
     ]
-    case_encl = [
+    case_quote = [
       %Q{Ten Thousand,10000, 2710 ,,'10,000','It''s "10 Grand", baby',10K\n},
       [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", baby", "10K" ]
     ]
     case_linebreak = [
-      %Q{Ten Thousand,10000, 2710 ,,"10,000","It's ""10 Grand"", \nbaby",10K\n},
-      [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", \nbaby", "10K" ]
+      %Q{Ten Thousand,10000, 2710 ,,"10,000","It's ""10 Grand"", baby",10K\r\n},
+      [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", baby", "10K" ]
     ]
 
-    assert_equal(case_basic.last, 
+    assert_equal(case_basic.last,
                  FastestCSV.parse_line(case_basic.first))
-    assert_equal(case_sep.last, 
-                 FastestCSV.parse_line(case_sep.first, ";"))
-    assert_equal(case_encl.last, 
-                 FastestCSV.parse_line(case_encl.first, ",", "'"))
-    assert_equal(case_linebreak.last, 
-                 FastestCSV.parse_line(case_linebreak.first))
+    assert_equal(case_sep.last,
+                 FastestCSV.parse_line(case_sep.first, col_sep: ";"))
+    assert_equal(case_quote.last,
+                 FastestCSV.parse_line(case_quote.first, quote_char: "'"))
+    assert_equal(case_linebreak.last,
+                 FastestCSV.parse_line(case_linebreak.first, row_sep: "\r\n"))
 
-    # parse_line should return the same value whether chomped or not, stopping
-    # at the newline (mirroring Ruby's CSV.parse_line)
+    assert_equal(CSV.parse_line(case_basic.first),
+                 FastestCSV.parse_line(case_basic.first))
+    assert_equal(CSV.parse_line(case_sep.first, col_sep: ";"),
+                 FastestCSV.parse_line(case_sep.first, col_sep: ";"))
+    assert_equal(CSV.parse_line(case_quote.first, quote_char: "'"),
+                 FastestCSV.parse_line(case_quote.first, quote_char: "'"))
+    assert_equal(CSV.parse_line(case_linebreak.first, row_sep: "\r\n"),
+                 FastestCSV.parse_line(case_linebreak.first, row_sep: "\r\n"))
 
     assert_equal(FastestCSV.parse_line(case_basic.first),
                  FastestCSV.parse_line(case_basic.first.chomp))
 
     # A read at eof? should return nil.
     assert_equal(nil, FastestCSV.parse_line(""))
-    
+
     # With CSV it's impossible to tell an empty line from a line containing a
-    # single nil field. The standard CSV library returns [nil]. We also do here, 
+    # single nil field. The standard CSV library returns [nil]. We also do here,
     # though FasterCSV and some other libraries return Array.new. Maybe make
-    # this a flag? 
+    # this a flag?
     assert_equal([nil], FastestCSV.parse_line("\n1,2,3\n"))
 
   end
@@ -90,7 +97,7 @@ class TestCSVParsing < Minitest::Test
       [";,;",                     [";", ";"]],
       ["foo,\"foo,bar,baz,foo\",\"foo\"", ["foo", "foo,bar,baz,foo", "foo"]],
     ].each do |csv_test|
-      assert_equal(csv_test.last, 
+      assert_equal(csv_test.last,
                    FastestCSV.parse_line(csv_test.first))
     end
 
@@ -116,9 +123,9 @@ class TestCSVParsing < Minitest::Test
       [%Q{,""},               [nil,""]],
       [%Q{,"\r"},             [nil,"\r"]],
       [%Q{"\r\n,"},           ["\r\n,"]],
-      [%Q{"\r\n,",},          ["\r\n,", nil]] 
+      [%Q{"\r\n,",},          ["\r\n,", nil]]
     ].each do |csv_test|
-      assert_equal(csv_test.last, 
+      assert_equal(csv_test.last,
                    FastestCSV.parse_line(csv_test.first))
     end
   end
@@ -136,7 +143,7 @@ class TestCSVParsing < Minitest::Test
       [%Q{"a\r\n\r\na","two CRLFs"},       ["a\r\n\r\na", 'two CRLFs']],
       [%Q{with blank,"start\n\nfinish"\n}, ['with blank', "start\n\nfinish"]],
     ].each do |csv_test|
-      assert_equal(csv_test.last, 
+      assert_equal(csv_test.last,
                    FastestCSV.parse_line(csv_test.first))
     end
   end

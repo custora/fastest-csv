@@ -18,7 +18,8 @@
 
 static VALUE mCsvParser;
 
-static VALUE parse_line(VALUE self, VALUE str, VALUE sep, VALUE quote_char) {
+static VALUE parse_line(VALUE self, VALUE str,
+                        VALUE sep_char, VALUE quote_char, VALUE linebreak_char) {
 
     VALUE array = rb_ary_new2(DEF_ARRAY_LEN);
     int state = 0;
@@ -26,9 +27,12 @@ static VALUE parse_line(VALUE self, VALUE str, VALUE sep, VALUE quote_char) {
     int i;
     char c;
 
-    const char *sepc = RSTRING_PTR(sep);
-    const char *quotec = RSTRING_PTR(quote_char);
-    const char *ptr = RSTRING_PTR(str);
+    const char *sepc       = RSTRING_PTR(sep_char);
+    const char *quotec     = RSTRING_PTR(quote_char);
+    const char *linebreakc = RSTRING_PTR(linebreak_char);
+    const char *ptr        = RSTRING_PTR(str);
+
+    int crlf = strcmp(linebreakc, "\r\n") == 0 ? 1 : 0;
 
     int len = (int) RSTRING_LEN(str);  /* cast to prevent warning in 64-bit OS */
     char *value = (char *)malloc(len * sizeof(char) + 1);
@@ -48,7 +52,6 @@ static VALUE parse_line(VALUE self, VALUE str, VALUE sep, VALUE quote_char) {
     for (i = 0; i < len; i++)
     {
         c = ptr[i];
-        /* if separator */
         if(c == sepc[0])
         {
             if (state == UNQUOTED) {
@@ -75,10 +78,20 @@ static VALUE parse_line(VALUE self, VALUE str, VALUE sep, VALUE quote_char) {
                 value[index++] = c;  /* escaped quote */
                 state = IN_QUOTED;
             }
-        /* if encounter a line break */
-        } else if (c == 13 || c == 10) {
+        /* if encounter a line break - only legal linebreaks are CR, LF, and CR LF */
+        } else if ((c == 13 && linebreakc[0] == 13) ||
+                   (c == 10 && linebreakc[0] == 10 && !crlf)) {
             if (state == IN_QUOTED) {
                 value[index++] = c;
+            }
+            else {
+                i = len;  /* only parse first line if multiline */
+            }
+        } else if (crlf && i < len-1 && c == 10 && ptr[i+1] == 13) {
+            if (state == IN_QUOTED) {
+                value[index] = c;
+                value[index+1] = ptr[i+1];
+                index += 2;
             }
             else {
                 i = len;  /* only parse first line if multiline */
@@ -100,14 +113,16 @@ static VALUE parse_line(VALUE self, VALUE str, VALUE sep, VALUE quote_char) {
     return array;
 }
 
-static VALUE generate_line(VALUE self, VALUE array, VALUE sep, VALUE quote_char, VALUE force_quote) {
+static VALUE generate_line(VALUE self, VALUE array,
+                           VALUE sep_char, VALUE quote_char, VALUE linebreak_char,
+                           VALUE force_quote) {
 
     char *c, *array_str_val, *converted_val;
     int quoting;
     long array_i, converted_i, array_str_val_len;
     VALUE array_val, result;
 
-    const char *sepc = RSTRING_PTR(sep);
+    const char *sepc = RSTRING_PTR(sep_char);
     const char *quotec = RSTRING_PTR(quote_char);
 
     int force_q;
@@ -165,7 +180,7 @@ static VALUE generate_line(VALUE self, VALUE array, VALUE sep, VALUE quote_char,
             c = array_str_val;
             while (*c) {
                 /* if not quoting and quote_char, sep, or line break, we need to
-                 * start quoting 
+                 * start quoting
                  */
                 if (!quoting && (*c == quotec[0] || *c == sepc[0] || *c == 13 || *c == 10)) {
                     quoting = 1;
@@ -230,6 +245,6 @@ static VALUE generate_line(VALUE self, VALUE array, VALUE sep, VALUE quote_char,
 void Init_csv_parser()
 {
     mCsvParser = rb_define_module("CsvParser");
-    rb_define_module_function(mCsvParser, "parse_line", parse_line, 3);
-    rb_define_module_function(mCsvParser, "generate_line", generate_line, 4);
+    rb_define_module_function(mCsvParser, "parse_line", parse_line, 4);
+    rb_define_module_function(mCsvParser, "generate_line", generate_line, 5);
 }

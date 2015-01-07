@@ -17,29 +17,32 @@ class TestCSVGenerating < Minitest::Test
       %Q{Ten Thousand;10000; 2710 ;;10,000;"It's ""10 Grand"", baby";10K\n},
       [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", baby", "10K" ]
     ]
-    case_encl = [
+    case_quote = [
       %Q{Ten Thousand,10000, 2710 ,,'10,000','It''s "10 Grand", baby',10K\n},
       [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", baby", "10K" ]
     ]
     case_linebreak = [
-      %Q{Ten Thousand,10000, 2710 ,,"10,000","It's ""10 Grand"", \nbaby",10K\n},
-      [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", \nbaby", "10K" ]
-    ]
-    case_basic_force_encl = [
-      %Q{"Ten Thousand","10000"," 2710 ","","10,000","It's ""10 Grand"", baby","10K"\n},
+      %Q{Ten Thousand,10000, 2710 ,,"10,000","It's ""10 Grand"", baby",10K\r\n},
       [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", baby", "10K" ]
     ]
 
-    assert_equal(case_basic.first, 
+    assert_equal(case_basic.first,
                  FastestCSV.generate_line(case_basic.last))
-    assert_equal(case_sep.first, 
-                 FastestCSV.generate_line(case_sep.last, ";"))
-    assert_equal(case_encl.first, 
-                 FastestCSV.generate_line(case_encl.last, ",", "'"))
-    assert_equal(case_linebreak.first, 
-                 FastestCSV.generate_line(case_linebreak.last))
-    assert_equal(case_basic_force_encl.first, 
-                 FastestCSV.generate_line(case_basic_force_encl.last, ",", "\"", true))
+    assert_equal(case_sep.first,
+                 FastestCSV.generate_line(case_sep.last, col_sep: ";"))
+    assert_equal(case_quote.first,
+                 FastestCSV.generate_line(case_quote.last, quote_char: "'"))
+    assert_equal(case_linebreak.first,
+                 FastestCSV.generate_line(case_linebreak.last, row_sep: "\r\n"))
+
+    assert_equal(CSV.generate_line(case_basic.last),
+                 FastestCSV.generate_line(case_basic.last))
+    assert_equal(CSV.generate_line(case_sep.last, col_sep: ";"),
+                 FastestCSV.generate_line(case_sep.last, col_sep: ";"))
+    assert_equal(CSV.generate_line(case_quote.last, quote_char: "'"),
+                 FastestCSV.generate_line(case_quote.last, quote_char: "'"))
+    assert_equal(CSV.generate_line(case_linebreak.last, row_sep: "\r\n"),
+                 FastestCSV.generate_line(case_linebreak.last, row_sep: "\r\n"))
 
   end
 
@@ -76,7 +79,7 @@ class TestCSVGenerating < Minitest::Test
       [";,;",                     [";", ";"]],
       ["foo,\"foo,bar,baz,foo\",foo", ["foo", "foo,bar,baz,foo", "foo"]],
     ].each do |csv_test|
-      assert_equal(csv_test.first + "\n", 
+      assert_equal(csv_test.first + "\n",
                    FastestCSV.generate_line(csv_test.last))
     end
 
@@ -86,8 +89,8 @@ class TestCSVGenerating < Minitest::Test
       ["\"foo\",\"\",\"baz\"",    ["foo", "", "baz"]],
       ["\"foo\",\"foo,bar,baz,foo\",\"foo\"", ["foo", "foo,bar,baz,foo", "foo"]],
     ].each do |csv_test|
-      assert_equal(csv_test.first + "\n", 
-                   FastestCSV.generate_line(csv_test.last, ",", "\"", true))
+      assert_equal(csv_test.first + "\n",
+                   FastestCSV.generate_line(csv_test.last, force_quote: true))
     end
 
   end
@@ -113,7 +116,7 @@ class TestCSVGenerating < Minitest::Test
       [%Q{"\r\n,"},           ["\r\n,"]],
       [%Q{"\r\n,",},          ["\r\n,", nil]]
     ].each do |csv_test|
-      assert_equal(csv_test.first + "\n", 
+      assert_equal(csv_test.first + "\n",
                    FastestCSV.generate_line(csv_test.last))
     end
 
@@ -123,8 +126,8 @@ class TestCSVGenerating < Minitest::Test
       [%Q{"""",""},           ["\"",""]],
       [%Q{"",""},             [nil,""]],
     ].each do |csv_test|
-      assert_equal(csv_test.first + "\n", 
-                   FastestCSV.generate_line(csv_test.last, ",", "\"", true))
+      assert_equal(csv_test.first + "\n",
+                   FastestCSV.generate_line(csv_test.last, force_quote: true))
     end
 
   end
@@ -148,7 +151,7 @@ class TestCSVGenerating < Minitest::Test
       [%Q{"a\r\n\r\na",two CRLFs},         ["a\r\n\r\na", 'two CRLFs']],
       [%Q{with blank,"start\n\nfinish",},  ['with blank', "start\n\nfinish", ""]],
     ].each do |csv_test|
-      assert_equal(csv_test.first + "\n", 
+      assert_equal(csv_test.first + "\n",
                    FastestCSV.generate_line(csv_test.last))
     end
 
@@ -161,8 +164,8 @@ class TestCSVGenerating < Minitest::Test
       [%Q{"with blank","start\n\nfinish"}, ['with blank', "start\n\nfinish"]],
       [%Q{"with blank","start\n\nfinish",""}, ['with blank', "start\n\nfinish", ""]],
     ].each do |csv_test|
-      assert_equal(csv_test.first + "\n", 
-                   FastestCSV.generate_line(csv_test.last, ",", "\"", true))
+      assert_equal(csv_test.first + "\n",
+                   FastestCSV.generate_line(csv_test.last, force_quote: true))
     end
 
   end

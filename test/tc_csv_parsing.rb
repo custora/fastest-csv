@@ -14,19 +14,19 @@ class TestCSVParsing < Minitest::Test
   def test_basic
 
     case_basic = [
-      %Q{Ten Thousand,10000, 2710 ,,"10,000","It's ""10 Grand"", baby",10K},
+      %Q{Ten Thousand,10000, 2710 ,,"10,000","It's ""10 Grand"", baby",10K\n},
       [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", baby", "10K" ]
     ]
     case_sep = [
-      %Q{Ten Thousand;10000; 2710 ;;"10,000";"It's ""10 Grand"", baby";10K},
+      %Q{Ten Thousand;10000; 2710 ;;"10,000";"It's ""10 Grand"", baby";10K\n},
       [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", baby", "10K" ]
     ]
     case_encl = [
-      %Q{Ten Thousand,10000, 2710 ,,'10,000','It''s "10 Grand", baby',10K},
+      %Q{Ten Thousand,10000, 2710 ,,'10,000','It''s "10 Grand", baby',10K\n},
       [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", baby", "10K" ]
     ]
     case_linebreak = [
-      %Q{Ten Thousand,10000, 2710 ,,"10,000","It's ""10 Grand"", \nbaby",10K},
+      %Q{Ten Thousand,10000, 2710 ,,"10,000","It's ""10 Grand"", \nbaby",10K\n},
       [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", \nbaby", "10K" ]
     ]
 
@@ -38,6 +38,21 @@ class TestCSVParsing < Minitest::Test
                  FastestCSV.parse_line(case_encl.first, ",", "'"))
     assert_equal(case_linebreak.last, 
                  FastestCSV.parse_line(case_linebreak.first))
+
+    # parse_line should return the same value whether chomped or not, stopping
+    # at the newline (mirroring Ruby's CSV.parse_line)
+
+    assert_equal(FastestCSV.parse_line(case_basic.first),
+                 FastestCSV.parse_line(case_basic.first.chomp))
+
+    # A read at eof? should return nil.
+    assert_equal(nil, FastestCSV.parse_line(""))
+    
+    # With CSV it's impossible to tell an empty line from a line containing a
+    # single nil field. The standard CSV library returns [nil]. We also do here, 
+    # though FasterCSV and some other libraries return Array.new. Maybe make
+    # this a flag? 
+    assert_equal([nil], FastestCSV.parse_line("\n1,2,3\n"))
 
   end
 
@@ -73,7 +88,7 @@ class TestCSVParsing < Minitest::Test
       ["foo,\"\r\n\n\",baz",      ["foo", "\r\n\n", "baz"]],
       ["foo,\"foo,bar\",baz",     ["foo", "foo,bar", "baz"]],
       [";,;",                     [";", ";"]],
-      ["foo,\"foo,bar,baz,foo\",\"foo\"", ["foo", "foo,bar,baz,foo", "foo"]]
+      ["foo,\"foo,bar,baz,foo\",\"foo\"", ["foo", "foo,bar,baz,foo", "foo"]],
     ].each do |csv_test|
       assert_equal(csv_test.last, 
                    FastestCSV.parse_line(csv_test.first))
@@ -106,19 +121,6 @@ class TestCSVParsing < Minitest::Test
       assert_equal(csv_test.last, 
                    FastestCSV.parse_line(csv_test.first))
     end
-  end
-
-  def test_james_edge_cases
-
-    # A read at eof? should return nil.
-    assert_equal(nil, FastestCSV.parse_line(""))
-    
-    # With CSV it's impossible to tell an empty line from a line containing a
-    # single nil field. The standard CSV library returns [nil]. We also do here, 
-    # though FasterCSV and some other libraries return Array.new. Maybe make
-    # this a flag? 
-    assert_equal([nil], FastestCSV.parse_line("\n1,2,3\n"))
-    
   end
 
   def test_rob_edge_cases

@@ -124,7 +124,7 @@ class FastestCSV
                             _opts[:col_sep],
                             _opts[:quote_char],
                             _opts[:row_sep],
-                            !!_opts[:force_quotes]) + _opts[:row_sep]
+                            !!_opts[:force_quotes])
   end
 
   # Create new FastestCSV wrapping the specified IO object

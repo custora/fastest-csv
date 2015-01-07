@@ -52,8 +52,7 @@ static VALUE parse_line(VALUE self, VALUE str,
     for (i = 0; i < len; i++)
     {
         c = ptr[i];
-        if(c == sepc[0])
-        {
+        if (c == sepc[0]) {
             if (state == UNQUOTED) {
                 rb_ary_push(array, (index == 0 ? Qnil: rb_str_new(value, index)));
                 index = 0;
@@ -122,9 +121,11 @@ static VALUE generate_line(VALUE self, VALUE array,
     long array_i, converted_i, array_str_val_len;
     VALUE array_val, result;
 
-    const char *sepc = RSTRING_PTR(sep_char);
-    const char *quotec = RSTRING_PTR(quote_char);
+    const char *sepc       = RSTRING_PTR(sep_char);
+    const char *quotec     = RSTRING_PTR(quote_char);
+    const char *linebreakc = RSTRING_PTR(linebreak_char);
 
+    int crlf = strcmp(linebreakc, "\r\n") == 0 ? 1 : 0;
     int force_q;
 
     if (NIL_P(sepc))
@@ -238,6 +239,7 @@ static VALUE generate_line(VALUE self, VALUE array,
 
     }
 
+    result = rb_str_cat2(result, linebreakc);
     return result;
 
 }

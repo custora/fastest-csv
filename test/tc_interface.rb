@@ -1,6 +1,6 @@
-#
-# Tests copied from faster_csv by James Edward Gray II
-#
+# Tests adapted from faster_csv:
+# https://github.com/JEG2/faster_csv/blob/master/test/tc_csv_parsing.rb
+# See LICENSE file for full license details.
 
 require 'minitest/autorun'
 require 'fastest_csv'

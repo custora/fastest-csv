@@ -9,7 +9,7 @@ Gem::Specification.new do |gem|
   gem.summary       = %q{Fastest standard CSV parser for MRI Ruby}
   gem.description   = gem.summary
   gem.homepage      = "https://github.com/custora/fastest-csv"
-  gem.licenses      = ['MIT', 'Ruby']
+  gem.licenses      = ['MIT', 'BSD']
 
   gem.files         = `git ls-files`.split($\)
   gem.require_paths = ["lib"]

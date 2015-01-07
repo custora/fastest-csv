@@ -3,7 +3,7 @@ require 'minitest/autorun'
 require 'fastest_csv'
 
 # These tests invert the tests in tc_csv_parsing.rb, with a few modifications
-# that are clearly noted. See comments in that file..
+# that are clearly noted. See comments in that file.
 
 class TestCSVGenerating < Minitest::Test
 

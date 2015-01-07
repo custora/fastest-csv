@@ -1,10 +1,6 @@
 # Tests adapted from faster_csv:
 # https://github.com/JEG2/faster_csv/blob/master/test/tc_csv_parsing.rb
-#
-# copyright notice included from that file:
-#
-#  Created by James Edward Gray II on 2005-10-31.
-#  Copyright 2012 Gray Productions. All rights reserved.
+# See LICENSE file for full license details.
 
 require 'minitest/autorun'
 require 'fastest_csv'

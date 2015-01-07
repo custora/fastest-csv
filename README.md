@@ -2,11 +2,11 @@
 
 [![Build Status](https://travis-ci.org/custora/fastest-csv.svg?branch=0.7)](https://travis-ci.org/custora/fastest-csv)
 
-Fastest CSV class for MRI Ruby. Faster than faster_csv and fasterer-csv. On par with csvscan, but supports any delimiter and fast (buffered) writing of CSVs. Uses native C code to parse CSV lines in MRI Ruby. Java support is de facto deprecated as we don't use it and don't keep it updated.
+Fast CSV reader/writer for MRI Ruby. Supports any delimiter and fast (buffered) writing of CSVs. Uses native C code to parse CSV lines in MRI Ruby.
 
-Supports an extension of the CSV grammar defined in [RFC4180](https://tools.ietf.org/html/rfc4180). See `grammar.md` for the full details. Not designed to support Excel CSVs.
+Understands an extension of the CSV grammar defined in [RFC4180](https://tools.ietf.org/html/rfc4180), with the important modification that the default linebreak character is LF, not CR LF. See `grammar.md` for the full details. Not designed to support Excel-formatted CSVs.
 
-The interface is a subset of the CSV interface in Ruby 1.9.3. The options parameter only accepts `col_sep` and `write_buffer_lines`.
+Java support is de facto deprecated as we don't use it and don't keep it updated.
 
 ## Usage
 

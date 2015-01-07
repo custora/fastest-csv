@@ -115,7 +115,7 @@ static VALUE parse_line(VALUE self, VALUE str,
 
 static VALUE generate_line(VALUE self, VALUE array,
                            VALUE sep_char, VALUE quote_char, VALUE linebreak_char,
-                           VALUE force_quote) {
+                           VALUE force_quotes) {
 
     char *c, *array_str_val, *converted_val;
     int quoting;
@@ -136,7 +136,7 @@ static VALUE generate_line(VALUE self, VALUE array,
         rb_raise(rb_eTypeError, "first argument must be an array");
 
 
-    switch (force_quote) {
+    switch (force_quotes) {
         case Qtrue:
             force_q = 1;
             break;
@@ -144,7 +144,7 @@ static VALUE generate_line(VALUE self, VALUE array,
             force_q = 0;
             break;
         default:
-            rb_raise(rb_eTypeError, "force_quote should be true or false");
+            rb_raise(rb_eTypeError, "force_quotes should be true or false");
             break;
     }
 

@@ -50,7 +50,10 @@ class FastestCSV
   end
 
   # Opens a csv file. Pass a FastestCSV instance to the provided block,
-  # or return it when no block is provided
+  # or return it when no block is provided.
+  # Note that if you want to pass options, you'll have to pass a mode too,
+  # otherwise the opts will be assigned to mode. Maybe move to named args in a
+  # later version.
   def self.open(path, mode = "rb:UTF-8", _opts = {})
     csv = new(File.open(path, mode), _opts)
     if block_given?
@@ -65,13 +68,13 @@ class FastestCSV
   end
 
   # Read all lines from the specified +path+ into an array of arrays
-  def self.read(path)
-    open(path, "rb:UTF-8") { |csv| csv.read }
+  def self.read(path, _opts={})
+    open(path, "rb:UTF-8", _opts) { |csv| csv.read }
   end
 
   # Alias for FastestCSV.read
-  def self.readlines(path)
-    read(path)
+  def self.readlines(path, _opts={})
+    read(path, _opts)
   end
 
   # Read all lines from the specified String into an array of arrays
@@ -95,6 +98,10 @@ class FastestCSV
       quote_char: DEFAULT_FIELDQUOTE,
     }.merge(_opts)
     assert_valid_grammar(_opts[:col_sep], _opts[:quote_char], _opts[:row_sep])
+    self.parse_line_no_check(line, _opts)
+  end
+
+  def self.parse_line_no_check(line, _opts)
     CsvParser.parse_line(line,
                          _opts[:col_sep],
                          _opts[:quote_char],
@@ -106,35 +113,47 @@ class FastestCSV
       col_sep:    DEFAULT_FIELDSEP,
       row_sep:    DEFAULT_LINEBREAK,
       quote_char: DEFAULT_FIELDQUOTE,
-      force_quote: false,
+      force_quotes: false,
     }.merge(_opts)
     assert_valid_grammar(_opts[:col_sep], _opts[:quote_char], _opts[:row_sep])
+    self.generate_line_no_check(data, _opts)
+  end
+
+  def self.generate_line_no_check(data, _opts)
     CsvParser.generate_line(data.map{|x| x.nil? ? x : x.to_s},
                             _opts[:col_sep],
                             _opts[:quote_char],
                             _opts[:row_sep],
-                            !!_opts[:force_quote]) + _opts[:row_sep]
+                            !!_opts[:force_quotes]) + _opts[:row_sep]
   end
 
   # Create new FastestCSV wrapping the specified IO object
   def initialize(io, _opts = {})
 
-    opts = {
+    _opts = {
+      col_sep:    DEFAULT_FIELDSEP,
+      row_sep:    DEFAULT_LINEBREAK,
+      quote_char: DEFAULT_FIELDQUOTE,
+      force_quotes: false,
+      force_utf8:   false,
       write_buffer_lines: DEFAULT_WRITE_BUFFER_LINES,
-      force_utf8: false
     }.merge(_opts)
 
-    @@separator = opts[:col_sep] || DEFAULT_FIELDSEP
-    @@quote_character = opts[:quote_character] || DEFAULT_FIELDQUOTE
-    @@write_buffer_lines = opts[:write_buffer_lines]
-    @@linebreak = opts[:line_break] || DEFAULT_LINEBREAK
-    @@encode = opts[:force_utf8]
+    self.class.assert_valid_grammar(_opts[:col_sep], _opts[:quote_char], _opts[:row_sep])
+    @opts = _opts
 
     @io = io
     @current_buffer_count = 0
     @current_write_buffer = ""
 
   end
+
+  def col_sep; @opts[:col_sep]; end
+  def row_sep; @opts[:row_sep]; end
+  def quote_char; @opts[:quote_char]; end
+  def force_quotes; @opts[:force_quotes]; end
+  def force_utf8; @opts[:force_utf8]; end
+  def write_buffer_lines; @opts[:write_buffer_lines]; end
 
   # Read from the wrapped IO passing each line as array to the specified block
   def each
@@ -153,27 +172,27 @@ class FastestCSV
 
   # Read next line from the wrapped IO and return as array or nil at EOF
   def shift
-    if line = @io.gets(@@linebreak)
+    if line = @io.gets(@opts[:row_sep])
       begin
-        quote_count = line.count(@@quote_character)
+        quote_count = line.count(@opts[:quote_char])
       rescue ArgumentError
         line.encode!(UTF_8_STRING, BINARY_STRING, invalid: :replace, undef: :replace, replace: SINGLE_SPACE)
-        quote_count = line.count(@@quote_character)
+        quote_count = line.count(@opts[:quote_char])
       end
       if(quote_count % 2 == 0)
-        CsvParser.parse_line(line, @@separator, @@quote_character)
+        self.class.parse_line_no_check(line, @opts)
       else
         while(quote_count % 2 != 0)
-          break unless new_line = @io.gets(@@linebreak)
+          break unless new_line = @io.gets(@opts[:row_sep])
           line << new_line
           begin
-            quote_count = line.count(@@quote_character)
+            quote_count = line.count(@opts[:quote_char])
           rescue ArgumentError
             line.encode!(UTF_8_STRING, BINARY_STRING, invalid: :replace, undef: :replace, replace: SINGLE_SPACE)
-            quote_count = line.count(@@quote_character)
+            quote_count = line.count(@opts[:quote_char])
           end
         end
-        CsvParser.parse_line(line, @@separator, @@quote_character)
+        self.class.parse_line_no_check(line, @opts)
       end
     else
       nil
@@ -184,11 +203,8 @@ class FastestCSV
 
   def <<(_array)
     @current_buffer_count += 1
-    # Below call to generate_line does NOT use @@separator or @@quote_character
-    # but only to ensure compatibility with old versions of the code. It seems
-    # like a good idea to change this at some point.
-    @current_write_buffer << FastestCSV.generate_line(_array, DEFAULT_FIELDSEP, DEFAULT_FIELDQUOTE)
-    if(@current_buffer_count == @@write_buffer_lines)
+    @current_write_buffer << FastestCSV.generate_line_no_check(_array, @opts)
+    if(@current_buffer_count == @opts[:write_buffer_lines])
       flush(false)
     end
   end

@@ -90,7 +90,7 @@ class TestCSVGenerating < Minitest::Test
       ["\"foo\",\"foo,bar,baz,foo\",\"foo\"", ["foo", "foo,bar,baz,foo", "foo"]],
     ].each do |csv_test|
       assert_equal(csv_test.first + "\n",
-                   FastestCSV.generate_line(csv_test.last, force_quote: true))
+                   FastestCSV.generate_line(csv_test.last, force_quotes: true))
     end
 
   end
@@ -127,7 +127,7 @@ class TestCSVGenerating < Minitest::Test
       [%Q{"",""},             [nil,""]],
     ].each do |csv_test|
       assert_equal(csv_test.first + "\n",
-                   FastestCSV.generate_line(csv_test.last, force_quote: true))
+                   FastestCSV.generate_line(csv_test.last, force_quotes: true))
     end
 
   end
@@ -165,7 +165,7 @@ class TestCSVGenerating < Minitest::Test
       [%Q{"with blank","start\n\nfinish",""}, ['with blank', "start\n\nfinish", ""]],
     ].each do |csv_test|
       assert_equal(csv_test.first + "\n",
-                   FastestCSV.generate_line(csv_test.last, force_quote: true))
+                   FastestCSV.generate_line(csv_test.last, force_quotes: true))
     end
 
   end

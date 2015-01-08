@@ -22,8 +22,12 @@ class TestCSVParsing < Minitest::Test
       %Q{Ten Thousand,10000, 2710 ,,'10,000','It''s "10 Grand", baby',10K\n},
       [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", baby", "10K" ]
     ]
-    case_linebreak = [
+    case_linebreak1 = [
       %Q{Ten Thousand,10000, 2710 ,,"10,000","It's ""10 Grand"", baby",10K\r\n},
+      [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", baby", "10K" ]
+    ]
+    case_linebreak2 = [
+      %Q{Ten Thousand,10000, 2710 ,,"10,000","It's ""10 Grand"", baby",10K\r},
       [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", baby", "10K" ]
     ]
 
@@ -33,8 +37,10 @@ class TestCSVParsing < Minitest::Test
                  FastestCSV.parse_line(case_sep.first, col_sep: ";"))
     assert_equal(case_quote.last,
                  FastestCSV.parse_line(case_quote.first, quote_char: "'"))
-    assert_equal(case_linebreak.last,
-                 FastestCSV.parse_line(case_linebreak.first, row_sep: "\r\n"))
+    assert_equal(case_linebreak1.last,
+                 FastestCSV.parse_line(case_linebreak1.first, row_sep: "\r\n"))
+    assert_equal(case_linebreak2.last,
+                 FastestCSV.parse_line(case_linebreak1.first, row_sep: "\r"))
 
     assert_equal(CSV.parse_line(case_basic.first),
                  FastestCSV.parse_line(case_basic.first))
@@ -42,8 +48,10 @@ class TestCSVParsing < Minitest::Test
                  FastestCSV.parse_line(case_sep.first, col_sep: ";"))
     assert_equal(CSV.parse_line(case_quote.first, quote_char: "'"),
                  FastestCSV.parse_line(case_quote.first, quote_char: "'"))
-    assert_equal(CSV.parse_line(case_linebreak.first, row_sep: "\r\n"),
-                 FastestCSV.parse_line(case_linebreak.first, row_sep: "\r\n"))
+    assert_equal(CSV.parse_line(case_linebreak1.first, row_sep: "\r\n"),
+                 FastestCSV.parse_line(case_linebreak1.first, row_sep: "\r\n"))
+    assert_equal(CSV.parse_line(case_linebreak2.first, row_sep: "\r"),
+                 FastestCSV.parse_line(case_linebreak2.first, row_sep: "\r"))
 
     assert_equal(FastestCSV.parse_line(case_basic.first),
                  FastestCSV.parse_line(case_basic.first.chomp))

@@ -21,8 +21,12 @@ class TestCSVGenerating < Minitest::Test
       %Q{Ten Thousand,10000, 2710 ,,'10,000','It''s "10 Grand", baby',10K\n},
       [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", baby", "10K" ]
     ]
-    case_linebreak = [
+    case_linebreak1 = [
       %Q{Ten Thousand,10000, 2710 ,,"10,000","It's ""10 Grand"", baby",10K\r\n},
+      [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", baby", "10K" ]
+    ]
+    case_linebreak2 = [
+      %Q{Ten Thousand,10000, 2710 ,,"10,000","It's ""10 Grand"", baby",10K\r},
       [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", baby", "10K" ]
     ]
 
@@ -32,8 +36,10 @@ class TestCSVGenerating < Minitest::Test
                  FastestCSV.generate_line(case_sep.last, col_sep: ";"))
     assert_equal(case_quote.first,
                  FastestCSV.generate_line(case_quote.last, quote_char: "'"))
-    assert_equal(case_linebreak.first,
-                 FastestCSV.generate_line(case_linebreak.last, row_sep: "\r\n"))
+    assert_equal(case_linebreak1.first,
+                 FastestCSV.generate_line(case_linebreak1.last, row_sep: "\r\n"))
+    assert_equal(case_linebreak2.first,
+                 FastestCSV.generate_line(case_linebreak1.last, row_sep: "\r"))
 
     assert_equal(CSV.generate_line(case_basic.last),
                  FastestCSV.generate_line(case_basic.last))
@@ -41,8 +47,10 @@ class TestCSVGenerating < Minitest::Test
                  FastestCSV.generate_line(case_sep.last, col_sep: ";"))
     assert_equal(CSV.generate_line(case_quote.last, quote_char: "'"),
                  FastestCSV.generate_line(case_quote.last, quote_char: "'"))
-    assert_equal(CSV.generate_line(case_linebreak.last, row_sep: "\r\n"),
-                 FastestCSV.generate_line(case_linebreak.last, row_sep: "\r\n"))
+    assert_equal(CSV.generate_line(case_linebreak1.last, row_sep: "\r\n"),
+                 FastestCSV.generate_line(case_linebreak1.last, row_sep: "\r\n"))
+    assert_equal(CSV.generate_line(case_linebreak2.last, row_sep: "\r"),
+                 FastestCSV.generate_line(case_linebreak1.last, row_sep: "\r"))
 
   end
 

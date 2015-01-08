@@ -23,6 +23,12 @@ class TestFastestCSVInterface < Minitest::Test
       file << "4,5\r\n"
     end
 
+    @path_cr = File.join(base_dir, "temp_test_data_cr.csv")
+    File.open(@path_cr, "w") do |file|
+      file << "1,2,3\r"
+      file << "4,5\r"
+    end
+
     @expected = [%w{1 2 3}, %w{4 5}]
 
   end
@@ -30,6 +36,7 @@ class TestFastestCSVInterface < Minitest::Test
   def teardown
     File.unlink(@path_basic)
     File.unlink(@path_crlf)
+    File.unlink(@path_cr)
   end
 
   ### Test Read Interface ###
@@ -43,6 +50,11 @@ class TestFastestCSVInterface < Minitest::Test
 
     expected = Array.new(@expected)
     FastestCSV.foreach(@path_crlf, row_sep: "\r\n") do |row|
+      assert_equal(expected.shift, row)
+    end
+
+    expected = Array.new(@expected)
+    FastestCSV.foreach(@path_cr, row_sep: "\r") do |row|
       assert_equal(expected.shift, row)
     end
 
@@ -86,6 +98,15 @@ class TestFastestCSVInterface < Minitest::Test
       assert_equal(expected.shift, row)
     end
 
+    expected = Array.new(@expected)
+    data = File.read(@path_cr, row_sep: "\r")
+    assert_equal( @expected,
+                  FastestCSV.parse(data, row_sep: "\r") )
+
+    FastestCSV.parse(data, row_sep: "\r") do |row|
+      assert_equal(expected.shift, row)
+    end
+
   end
 
   def test_parse_line_with_empty_lines
@@ -105,6 +126,10 @@ class TestFastestCSVInterface < Minitest::Test
                   FastestCSV.read(@path_crlf, row_sep: "\r\n") )
     assert_equal( @expected,
                   FastestCSV.readlines(@path_crlf, row_sep: "\r\n"))
+    assert_equal( @expected,
+                  FastestCSV.read(@path_cr, row_sep: "\r") )
+    assert_equal( @expected,
+                  FastestCSV.readlines(@path_cr, row_sep: "\r"))
 
     data = FastestCSV.read(@path_basic)
     assert_equal(@expected, data)
@@ -114,6 +139,11 @@ class TestFastestCSVInterface < Minitest::Test
     data = FastestCSV.read(@path_crlf, row_sep: "\r\n")
     assert_equal(@expected, data)
     data = FastestCSV.readlines(@path_crlf, row_sep: "\r\n")
+    assert_equal(@expected, data)
+
+    data = FastestCSV.read(@path_cr, row_sep: "\r")
+    assert_equal(@expected, data)
+    data = FastestCSV.readlines(@path_cr, row_sep: "\r")
     assert_equal(@expected, data)
 
   end
@@ -134,6 +164,13 @@ class TestFastestCSVInterface < Minitest::Test
       assert_equal(nil, csv.shift)
     end
 
+    expected = Array.new(@expected)
+    FastestCSV.open(@path_cr, "r+", row_sep: "\r") do |csv|
+      assert_equal(expected.shift, csv.shift)
+      assert_equal(expected.shift, csv.shift)
+      assert_equal(nil, csv.shift)
+    end
+
   end
 
   def test_long_line
@@ -148,6 +185,11 @@ class TestFastestCSVInterface < Minitest::Test
     File.unlink(@path_crlf)
     File.open(@path_crlf, "w") do |file|
       file << "1,2,#{'3' * long_field_length}\r\n"
+    end
+
+    File.unlink(@path_cr)
+    File.open(@path_cr, "w") do |file|
+      file << "1,2,#{'3' * long_field_length}\r"
     end
 
     @expected = [%w{1 2} + ['3' * long_field_length]]

@@ -142,4 +142,19 @@ class TestCSVGenerating < Minitest::Test
     end
   end
 
+  def test_jon_edge_cases
+    [ [%Q{wiggle,"waggle""this",another'thing},      ["wiggle", "waggle\"this", "another'thing"]],
+      [%Q{wiggle,"waggle""this",another''thing},     ["wiggle", "waggle\"this", "another''thing"]],
+      [%Q{wiggle,"""waggle""this,another''thing"},   ["wiggle", "\"waggle\"this,another''thing"]],
+      [%Q{wiggle,"""waggle""this,another''thing"""}, ["wiggle", "\"waggle\"this,another''thing\""]],
+      [%Q{wiggle,"""waggle""this""""","""""""another''thing"""}, ["wiggle", "\"waggle\"this\"\"", "\"\"\"another''thing\""]],
+      [%Q{wiggle,"""waggle""this"""""",""""""another''thing"""}, ["wiggle", "\"waggle\"this\"\"\",\"\"\"another''thing\""]],
+      [%Q{wiggle,"""waggle""this""""""","""""another''thing"""}, ["wiggle", "\"waggle\"this\"\"\"", "\"\"another''thing\""]],
+      [%Q{wiggle,"""""""waggle""""""""this"""""""""""""""},      ["wiggle", "\"\"\"waggle\"\"\"\"this\"\"\"\"\"\"\""]],
+    ].each do |csv_test|
+      assert_equal(csv_test.first + "\n", FastestCSV.generate_line(csv_test.last))
+    end
+  end
+
+
 end

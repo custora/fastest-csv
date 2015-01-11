@@ -105,9 +105,10 @@ static VALUE parse_line(VALUE self, VALUE str, VALUE sep, VALUE quote_char) {
 
 static VALUE generate_line(VALUE self, VALUE array, VALUE sep, VALUE quote_char, VALUE force_quote) {
 
-    char *c, *array_str_val, *converted_val;
+    char c;
+    char *array_str_val, *converted_val;
     int quoting;
-    long array_i, converted_i, array_str_val_len;
+    long array_i, raw_i, converted_i, array_str_val_len;
     VALUE array_val, result;
 
     const char *sepc = RSTRING_PTR(sep);
@@ -122,7 +123,6 @@ static VALUE generate_line(VALUE self, VALUE array, VALUE sep, VALUE quote_char,
 
     if (TYPE(array) != T_ARRAY)
         rb_raise(rb_eTypeError, "first argument must be an array");
-
 
     switch (force_quote) {
         case Qtrue:
@@ -145,16 +145,16 @@ static VALUE generate_line(VALUE self, VALUE array, VALUE sep, VALUE quote_char,
         if (TYPE(array_val) == T_STRING || TYPE(array_val) == T_NIL) {
 
             if (TYPE(array_val) == T_STRING) {
-                array_str_val = StringValueCStr(array_val);
-                array_str_val_len = RSTRING_LEN(array_val) + 1;
+                array_str_val = StringValuePtr(array_val);
+                array_str_val_len = RSTRING_LEN(array_val);
             }
             else {
                 array_str_val = "";
-                array_str_val_len = 1;
+                array_str_val_len = 0;
             }
 
             /* malloc: at most
-             *   2*(length-1) (every character doubled except null terminator)
+             *   2*length (every character doubled)
              *   + 2 (delims)
              *   + 1 (possible leading separator char)
              */
@@ -164,28 +164,28 @@ static VALUE generate_line(VALUE self, VALUE array, VALUE sep, VALUE quote_char,
                 rb_raise(rb_eNoMemError, "could not allocate memory for converted field value");
 
             converted_i = 2;
+            raw_i = 0;
 
-            c = array_str_val;
-            while (*c) {
+            while (raw_i < array_str_val_len) {
+                c = array_str_val[raw_i];
                 /* if not quoting and quote_char, sep, or line break, we need to
                  * start quoting */
-                if (!quoting && (*c == quotec[0] || *c == sepc[0] || *c == 13 || *c == 10)) {
+                if (!quoting && (c == quotec[0] || c == sepc[0] || c == 13 || c == 10)) {
                     quoting = 1;
                 }
                 /* if quote_char, dupe it */
-                if (*c == quotec[0]) {
-                    converted_val[converted_i] = *c;
-                    converted_val[converted_i+1] = *c;
+                if (c == quotec[0]) {
+                    converted_val[converted_i] = c;
+                    converted_val[converted_i+1] = c;
                     converted_i += 2;
                 }
                 /* else just add it */
                 else {
-                    converted_val[converted_i] = *c;
+                    converted_val[converted_i] = c;
                     converted_i += 1;
                 }
-                c++;
+                raw_i++;
             }
-            converted_val[converted_i] = '\0';
 
             /* depending on quoting and whether or not we need to append the
              * leading separator, strcpy from different points in converted_val
@@ -194,24 +194,22 @@ static VALUE generate_line(VALUE self, VALUE array, VALUE sep, VALUE quote_char,
             if (quoting) {
                 converted_val[1] = quotec[0];
                 converted_val[converted_i] = quotec[0];
-                converted_val[converted_i+1] = '\0';
                 if (array_i > 0) {
                     converted_val[0] = sepc[0];
-                    result = rb_str_cat2(result, converted_val);
+                    result = rb_str_cat(result, converted_val, converted_i+1);
                 }
                 else {
-                    result = rb_str_cat2(result, &converted_val[1]);
+                    result = rb_str_cat(result, &converted_val[1], converted_i);
                 }
 
             }
             else {
-                converted_val[converted_i] = '\0';
                 if (array_i > 0) {
                     converted_val[1] = sepc[0];
-                    result = rb_str_cat2(result, &converted_val[1]);
+                    result = rb_str_cat(result, &converted_val[1], converted_i-1);
                 }
                 else {
-                    result = rb_str_cat2(result, &converted_val[2]);
+                    result = rb_str_cat(result, &converted_val[2], converted_i-2);
                 }
             }
 

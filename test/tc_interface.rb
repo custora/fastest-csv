@@ -197,4 +197,69 @@ class TestFastestCSVInterface < Minitest::Test
 
   end
 
+  def test_check_field_count
+
+    FastestCSV.open(@path_basic, "r", check_field_count: true) do |f|
+      assert_nil(f.field_count)
+      row1 = f.shift
+      assert_equal(3, f.field_count)
+      assert_raises RuntimeError do
+        row2 = f.shift
+      end
+    end
+
+    assert_raises RuntimeError do
+      FastestCSV.foreach(@path_basic, check_field_count: true) do |row|
+      end
+    end
+
+    FastestCSV.open(@path_basic, "r", check_field_count: true, field_count: 4) do |f|
+      assert_raises RuntimeError do
+        row = f.shift
+      end
+    end
+
+    # these should raise no exceptions
+
+    File.unlink(@path_basic)
+    File.open(@path_basic, "w") do |file|
+      file << "1,2,3\n"
+      file << "4,5,6\n"
+      file << "7,8,9\n"
+    end
+
+    FastestCSV.foreach(@path_basic, check_field_count: true) do |row|
+    end
+
+    FastestCSV.open(@path_basic, "r", check_field_count: true) do |f|
+      f.shift
+      f.shift
+      f.shift
+      f.shift  # should still be ok
+      f.shift  # should still be ok
+    end
+
+    # these should raise no exceptions
+
+    File.unlink(@path_basic)
+    File.open(@path_basic, "w") do |file|
+      file << "1,2,3\n"
+      file << "\n"
+      file << "7,8,9\n"
+    end
+
+    assert_raises RuntimeError do
+      FastestCSV.foreach(@path_basic, check_field_count: true) do |row|
+      end
+    end
+
+    FastestCSV.open(@path_basic, "r", check_field_count: true) do |f|
+      f.shift
+      assert_raises RuntimeError do
+        f.shift
+      end
+    end
+
+  end
+
 end

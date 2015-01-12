@@ -137,6 +137,8 @@ class FastestCSV
       force_quotes: false,
       force_utf8:   false,
       write_buffer_lines: DEFAULT_WRITE_BUFFER_LINES,
+      check_field_count:  false,
+      field_count:        nil,
     }.merge(_opts)
 
     self.class.assert_valid_grammar(_opts[:col_sep], _opts[:quote_char], _opts[:row_sep])
@@ -145,6 +147,7 @@ class FastestCSV
     @io = io
     @current_buffer_count = 0
     @current_write_buffer = ""
+    @field_count = @opts[:field_count]
 
   end
 
@@ -154,6 +157,9 @@ class FastestCSV
   def force_quotes; @opts[:force_quotes]; end
   def force_utf8; @opts[:force_utf8]; end
   def write_buffer_lines; @opts[:write_buffer_lines]; end
+  def check_field_count; @opts[:check_field_count]; end
+
+  def field_count; @field_count; end
 
   # Read from the wrapped IO passing each line as array to the specified block
   def each
@@ -180,7 +186,7 @@ class FastestCSV
         quote_count = line.count(@opts[:quote_char])
       end
       if(quote_count % 2 == 0)
-        self.class.parse_line_no_check(line, @opts)
+        parsed_line = self.class.parse_line_no_check(line, @opts)
       else
         while(quote_count % 2 != 0)
           break unless new_line = @io.gets(@opts[:row_sep])
@@ -192,10 +198,16 @@ class FastestCSV
             quote_count = line.count(@opts[:quote_char])
           end
         end
-        self.class.parse_line_no_check(line, @opts)
+        parsed_line = self.class.parse_line_no_check(line, @opts)
       end
+      if check_field_count && @field_count.nil?
+        @field_count = parsed_line.length
+      elsif check_field_count && @field_count != parsed_line.length
+        raise "Default field count is #{@field_count}, but the following line parsed into #{parsed_line.length} entries: \n#{line}"
+      end
+      parsed_line
     else
-      nil
+      parsed_line = nil
     end
   end
   alias_method :gets,     :shift

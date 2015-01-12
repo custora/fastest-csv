@@ -181,4 +181,15 @@ class TestCSVParsing < Minitest::Test
   #   FastestCSV.parse_line("1,\"23\"4\"5\", 6")
   # end
 
+  def test_null_edge_cases
+    # Technically not valid CSV to have a null character - review this in the 
+    # next version. Just trying to match old to_csv functionality for now, which
+    # does accept and process it. 
+    [ [ %Q{\x00,a}, ["\x00", "a"] ],
+      [ %Q{a,\x00,b,,c} , ["a", "\x00", "b", nil, "c"] ],
+    ].each do |csv_test|
+      assert_equal(csv_test.last, FastestCSV.parse_line(csv_test.first))
+    end
+  end
+
 end

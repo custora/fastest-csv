@@ -193,9 +193,9 @@ class TestCSVGenerating < Minitest::Test
   end
 
   def test_null_edge_cases
-    # Technically not valid CSV to have a null character - review this in the 
+    # Technically not valid CSV to have a null character - review this in the
     # next version. Just trying to match old to_csv functionality for now, which
-    # does accept and process it. 
+    # does accept and process it.
     [ [ %Q{\x00,a}, ["\x00", "a"] ],
       [ %Q{a,\x00,b,,c} , ["a", "\x00", "b", nil, "c"] ],
     ].each do |csv_test|

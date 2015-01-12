@@ -166,13 +166,6 @@ class TestCSVParsing < Minitest::Test
     end
   end
 
-  def test_non_regex_edge_cases
-
-    [["foo,\"foo,bar,baz,foo\",\"foo\"", ["foo", "foo,bar,baz,foo", "foo"]]].each do |edge_case|
-      assert_equal(edge_case.last, FastestCSV.parse_line(edge_case.first))
-    end
-
-
   # Unlike FasterCSV, we are not doing much in the way of error checking,
   # and so we don't have malformed CSV checks. But perhaps we should, if we
   # can trade it off for speed?
@@ -182,9 +175,9 @@ class TestCSVParsing < Minitest::Test
   # end
 
   def test_null_edge_cases
-    # Technically not valid CSV to have a null character - review this in the 
+    # Technically not valid CSV to have a null character - review this in the
     # next version. Just trying to match old to_csv functionality for now, which
-    # does accept and process it. 
+    # does accept and process it.
     [ [ %Q{\x00,a}, ["\x00", "a"] ],
       [ %Q{a,\x00,b,,c} , ["a", "\x00", "b", nil, "c"] ],
     ].each do |csv_test|

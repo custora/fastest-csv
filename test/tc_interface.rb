@@ -39,7 +39,25 @@ class TestFastestCSVInterface < Minitest::Test
     File.unlink(@path_cr)
   end
 
-  ### Test Read Interface ###
+
+  def test_invalid_grammar
+
+    assert_raises RuntimeError do
+      FastestCSV.foreach(@path_basic, row_sep: "A") do |row|
+      end
+    end
+
+    assert_raises RuntimeError do
+      FastestCSV.foreach(@path_basic, col_sep: ",", quote_char: ",") do |row|
+      end
+    end
+
+    assert_raises RuntimeError do
+      FastestCSV.foreach(@path_basic, col_sep: ",,") do |row|
+      end
+    end
+
+  end
 
   def test_foreach
 

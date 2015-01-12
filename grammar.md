@@ -41,7 +41,7 @@ We extend it to a family of grammars as follows:
 
   - Users can specify their own value for FIELDQUOTE that can fall in the range %x20-7E but may not be equal to FIELDSEP.
 
-  - TEXTDATA is accordingly redefined to be any character in the range %x20-7E except for FIELDSEP and FIELDQUOTE.
+  - TEXTDATA is redefined to be any character except for FIELDSEP and FIELDQUOTE. (As of right now any character is supported, instead of the more strictly defined range of characters in RFC 4180).
 
   - Users can specify their own value for LINEBREAK, but it must be either CR, LF, or CR LF.
 

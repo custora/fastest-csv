@@ -5,6 +5,8 @@
 - Explicitly define supported CSV grammar, do more careful checking for validity
 - `shift` and `<<` now respect user-specified field separator and quote characters
 - Removed `to_csv` and its helpers `escapable_chars_including_comma` and `escapable_chars_not_comma`
+- Add options `check_field_count` and `field_count` to catch CSV files with unequal numbers of fields
+- Permit NUL char to be output by `generate_line`
 - Tidied up tests
 
 # 0.6.4

@@ -146,11 +146,31 @@ class TestCSVParsing < Minitest::Test
       [%Q{"a\r\na","one CRLF"},            ["a\r\na", 'one CRLF']],
       [%Q{"a\r\n\r\na","two CRLFs"},       ["a\r\n\r\na", 'two CRLFs']],
       [%Q{with blank,"start\n\nfinish"\n}, ['with blank', "start\n\nfinish"]],
+    ].each do |edge_case|
+      assert_equal(edge_case.last, FastestCSV.parse_line(edge_case.first))
+    end
+  end
+
+  def test_jon_edge_cases
+    [ [%Q{wiggle,"waggle""this",another'thing},      ["wiggle", "waggle\"this", "another'thing"]],
+      [%Q{wiggle,"waggle""this",another''thing},     ["wiggle", "waggle\"this", "another''thing"]],
+      [%Q{wiggle,"""waggle""this,another''thing"},   ["wiggle", "\"waggle\"this,another''thing"]],
+      [%Q{wiggle,"""waggle""this,another''thing"""}, ["wiggle", "\"waggle\"this,another''thing\""]],
+      [%Q{wiggle,"""waggle""this""""","""""""another''thing"""}, ["wiggle", "\"waggle\"this\"\"", "\"\"\"another''thing\""]],
+      [%Q{wiggle,"""waggle""this"""""",""""""another''thing"""}, ["wiggle", "\"waggle\"this\"\"\",\"\"\"another''thing\""]],
+      [%Q{wiggle,"""waggle""this""""""","""""another''thing"""}, ["wiggle", "\"waggle\"this\"\"\"", "\"\"another''thing\""]],
+      [%Q{wiggle,"""""""waggle""""""""this"""""""""""""""},      ["wiggle", "\"\"\"waggle\"\"\"\"this\"\"\"\"\"\"\""]],
     ].each do |csv_test|
       assert_equal(csv_test.last,
                    FastestCSV.parse_line(csv_test.first))
     end
   end
+
+  def test_non_regex_edge_cases
+
+    [["foo,\"foo,bar,baz,foo\",\"foo\"", ["foo", "foo,bar,baz,foo", "foo"]]].each do |edge_case|
+      assert_equal(edge_case.last, FastestCSV.parse_line(edge_case.first))
+    end
 
 
   # Unlike FasterCSV, we are not doing much in the way of error checking,

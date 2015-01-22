@@ -57,6 +57,11 @@ class TestFastestCSVInterface < Minitest::Test
       end
     end
 
+    assert_raises RuntimeError do
+      FastestCSV.foreach(@path_basic, grammar: "not-strict-or-relaxed") do |row|
+      end
+    end
+
   end
 
   def test_foreach

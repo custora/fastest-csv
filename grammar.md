@@ -1,4 +1,8 @@
 
+# CSV grammar
+
+## Strict
+
 [RFC 4180](https://tools.ietf.org/html/rfc4180) defines a standard and a grammar for CSVs. This gem implements an extended version of RFC 4180 that permits certain characters to be changed. For example, the user can configure which characters separate or enclose fields.
 
 The RFC 4180 ABNF grammar, using the syntax in [RFC 5234](https://tools.ietf.org/html/rfc5234), is reproduced below:
@@ -46,10 +50,21 @@ We extend it to a family of grammars as follows:
   - Users can specify their own value for LINEBREAK, but it must be either CR, LF, or CR LF.
 
 
-The gem uses the following default values:
+This is the grammar that is used when 'strict' grammar is specified. Note that the default is 'relaxed', which will be explained further below. The gem uses the following default values:
 
   - FIELDSEP: `,`
   - FIELDQUOTE: `"`
   - LINEBREAK: `\n`
 
-Note importantly that the default value for LINEBREAK is just LF and not CR LF (which is the value in RFC 4180).
+Note that the default value for LINEBREAK is just LF and not CR LF (which is the linebreak value in RFC 4180).
+
+
+## Relaxed
+
+The default option in this package is actually 'relaxed' grammar, which will attempt to make some unambiguous interpretations of inputs that are technically syntactically incorrect under the strict grammar above. Under relaxed grammar:
+
+  - if FIELDQUOTE is encountered in the middle of a non-escaped TEXTDATA, it will be interpreted as a regular character
+
+  - if FIELDQUOTE is encountered in the middle of an escaped TEXTDATA but is not followed by another FIELDQUOTE, it will be interpreted as a regular character
+
+These departures from the fairly clean CSV grammar defined above are to help deal with common malformations in CSV that are still accepted by MySQL's `LOAD DATA INFILE`.

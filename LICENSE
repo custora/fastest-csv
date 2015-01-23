@@ -60,7 +60,7 @@ The files
   tc_csv_parsing.rb
   tc_interface.rb
   tc_speed.rb
-  test_data.csv
+  test_data_speed.csv
 
 are adapted from James Edward Gray II's FasterCSV
 (https://github.com/JEG2/faster_csv), and are released under the BSDL license

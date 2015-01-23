@@ -20,11 +20,33 @@ typedef enum modes {STRICT, RELAXED} grammar_mode_t;
 
 static VALUE mCsvParser;
 
+/* parse_line
+ * Parses a CSV-formatted string into a list of strings. Returns a two-element
+ * array whose first element is the list of strings and whose second element is
+ * true if the line was complete and false otherwise.
+ *
+ *   str - the string to parse
+ *   sep_char - the character that separates fields, assumed to be a string of
+ *     length 1
+ *   quote_char: the character that encloses quoted fields, assumed to be a
+ *     string of length 1
+ *   linebreak_char: the string that separates rows, assumed to be either \r,
+ *     \n, or \r\n
+ *   grammar_code: if 0, strict CSV syntax rules are followed; if 1, single
+ *     occurrences of quote_char in unquoted fields are interpreted as ordinary
+ *     characters
+ *   start_in_quoted: if nonzero, will start reading the line as if it were
+ *     quoted; used to read lines whose contents are continuations of previous
+ *     lines (due to linebreaks in the middle of a quoted field)
+ */
+
 static VALUE parse_line(VALUE self, VALUE str,
                         VALUE sep_char, VALUE quote_char, VALUE linebreak_char,
-                        VALUE grammar_code) {
+                        VALUE grammar_code, VALUE start_in_quoted) {
 
+    VALUE output = rb_ary_new2(2);
     VALUE array = rb_ary_new2(DEF_ARRAY_LEN);
+
     int state = 0;
     int index = 0;
     int i;
@@ -56,15 +78,11 @@ static VALUE parse_line(VALUE self, VALUE str,
     if (value == NULL)
         rb_raise(rb_eNoMemError, "could not allocate memory for parsed field value");
 
-    if (NIL_P(str))
-        return Qnil;
-    if (NIL_P(sepc))
-        return Qnil;
-    if (NIL_P(quotec))
-        return Qnil;
-
-    if (len == 0)
-        return Qnil;
+    if (NIL_P(str) || NIL_P(sepc) || NIL_P(quotec) || len == 0) {
+        rb_ary_push(output, Qnil);
+        rb_ary_push(output, Qtrue);
+        return output;
+    }
 
     for (i = 0; i < len; i++)
     {
@@ -159,21 +177,22 @@ static VALUE parse_line(VALUE self, VALUE str,
 
     if (state == UNQUOTED) {
         rb_ary_push(array, (index == 0 ? Qnil: rb_str_new(value, index)));
+        rb_ary_push(output, array);
+        rb_ary_push(output, Qtrue);
     }
     else if (state == QUOTE_IN_QUOTED) {
         rb_ary_push(array, rb_str_new(value, index));
-    }
-    else if (mode == RELAXED) {
-        /* MySQL LOAD DATA INFILE syntax will accept this, but we will not.
-         * Revisit this in the future. */
-        rb_raise(rb_eRuntimeError, "CSV syntax error (relaxed grammar), unexpected end of line: %s", ptr);
+        rb_ary_push(output, array);
+        rb_ary_push(output, Qtrue);
     }
     else {
-        rb_raise(rb_eRuntimeError, "CSV syntax error (strict grammar): %s", ptr);
+        rb_ary_push(array, rb_str_new(value, index));
+        rb_ary_push(output, array);
+        rb_ary_push(output, Qfalse);
     }
 
     free(value);
-    return array;
+    return output;
 }
 
 static VALUE generate_line(VALUE self, VALUE array,
@@ -309,6 +328,6 @@ static VALUE generate_line(VALUE self, VALUE array,
 void Init_csv_parser()
 {
     mCsvParser = rb_define_module("CsvParser");
-    rb_define_module_function(mCsvParser, "parse_line", parse_line, 5);
+    rb_define_module_function(mCsvParser, "parse_line", parse_line, 6);
     rb_define_module_function(mCsvParser, "generate_line", generate_line, 5);
 }

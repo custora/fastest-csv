@@ -97,15 +97,18 @@ class FastestCSV
     }.merge(_opts)
     assert_valid_grammar(_opts[:col_sep], _opts[:quote_char], _opts[:row_sep], _opts[:grammar])
     _opts[:grammar] = (_opts[:grammar] == "strict") ? 0 : 1
-    self.parse_line_no_check(line, _opts)
+    output = self.parse_line_no_check(line, _opts)
+    raise RuntimeError, "Incomplete CSV line under strict grammar: #{line}" if _opts[:grammar] == 0 && !output[1]
+    output[0]
   end
 
-  def self.parse_line_no_check(line, _opts)
+  def self.parse_line_no_check(line, _opts, _start_in_quoted=0)
     CsvParser.parse_line(line,
                          _opts[:col_sep],
                          _opts[:quote_char],
                          _opts[:row_sep],
-                         _opts[:grammar])
+                         _opts[:grammar],
+                         _start_in_quoted)
   end
 
   def self.generate_line(data, _opts = {})
@@ -184,27 +187,13 @@ class FastestCSV
 
   # Read next line from the wrapped IO and return as array or nil at EOF
   def shift
-    if line = @io.gets(@opts[:row_sep])
-      begin
-        quote_count = line.count(@opts[:quote_char])
-      rescue ArgumentError
-        line.encode!(UTF_8_STRING, BINARY_STRING, invalid: :replace, undef: :replace, replace: SINGLE_SPACE)
-        quote_count = line.count(@opts[:quote_char])
-      end
-      if(quote_count % 2 == 0)
-        parsed_line = self.class.parse_line_no_check(line, @opts)
-      else
-        while(quote_count % 2 != 0)
-          break unless new_line = @io.gets(@opts[:row_sep])
-          line << new_line
-          begin
-            quote_count = line.count(@opts[:quote_char])
-          rescue ArgumentError
-            line.encode!(UTF_8_STRING, BINARY_STRING, invalid: :replace, undef: :replace, replace: SINGLE_SPACE)
-            quote_count = line.count(@opts[:quote_char])
-          end
-        end
-        parsed_line = self.class.parse_line_no_check(line, @opts)
+    line = @io.gets(@opts[:row_sep])
+    if line
+      parsed_line, complete_line = self.class.parse_line_no_check(line, @opts)
+      while !complete_line && (line = @io.gets(@opts[:row_sep])) do
+        parsed_partial_line, complete_line = self.class.parse_line_no_check(line, @opts, 1)
+        parsed_line[parsed_line.length-1] += parsed_partial_line.shift
+        parsed_line += parsed_partial_line
       end
       if check_field_count && @field_count.nil?
         @field_count = parsed_line.length
@@ -213,9 +202,10 @@ class FastestCSV
       end
       parsed_line
     else
-      parsed_line = nil
+      nil
     end
   end
+
   alias_method :gets,     :shift
   alias_method :readline, :shift
 

@@ -10,7 +10,7 @@ require 'csv'
 
 class TestCSVSpeed < Minitest::Test
 
-  PATH = File.join(File.dirname(__FILE__), "test_data.csv")
+  PATH = File.join(File.dirname(__FILE__), "test_data_speed.csv")
 
   def test_that_we_are_doing_the_same_work
 

@@ -49,4 +49,10 @@ class TestCSVRelaxed < Minitest::Test
 
   end
 
+  def test_relaxed_io_parsing
+
+    # TODO: test if we now read files in properly
+
+  end
+
 end

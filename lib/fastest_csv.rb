@@ -26,7 +26,7 @@ class FastestCSV
     VERSION
   end
 
-  def self.assert_valid_grammar(_fieldsep, _fieldquote, _linebreak)
+  def self.assert_valid_grammar(_fieldsep, _fieldquote, _linebreak, _grammar)
     if !((_fieldsep.is_a? String) && _fieldsep.length == 1)
       raise "separator character must be a string of length 1"
     end
@@ -38,6 +38,9 @@ class FastestCSV
     end
     if (_fieldsep == _fieldquote)
       raise "separator and quote characters cannot be the same"
+    end
+    if !(["strict", "relaxed"].include? _grammar)
+      raise "grammar must be 'strict' or 'relaxed'"
     end
     true
   end
@@ -96,8 +99,10 @@ class FastestCSV
       col_sep:    DEFAULT_FIELDSEP,
       row_sep:    DEFAULT_LINEBREAK,
       quote_char: DEFAULT_FIELDQUOTE,
+      grammar:    "relaxed",
     }.merge(_opts)
-    assert_valid_grammar(_opts[:col_sep], _opts[:quote_char], _opts[:row_sep])
+    assert_valid_grammar(_opts[:col_sep], _opts[:quote_char], _opts[:row_sep], _opts[:grammar])
+    _opts[:grammar] = (_opts[:grammar] == "strict") ? 0 : 1
     self.parse_line_no_check(line, _opts)
   end
 
@@ -105,7 +110,8 @@ class FastestCSV
     CsvParser.parse_line(line,
                          _opts[:col_sep],
                          _opts[:quote_char],
-                         _opts[:row_sep])
+                         _opts[:row_sep],
+                         _opts[:grammar])
   end
 
   def self.generate_line(data, _opts = {})
@@ -113,9 +119,11 @@ class FastestCSV
       col_sep:    DEFAULT_FIELDSEP,
       row_sep:    DEFAULT_LINEBREAK,
       quote_char: DEFAULT_FIELDQUOTE,
+      grammar:    "relaxed",
       force_quotes: false,
     }.merge(_opts)
-    assert_valid_grammar(_opts[:col_sep], _opts[:quote_char], _opts[:row_sep])
+    assert_valid_grammar(_opts[:col_sep], _opts[:quote_char], _opts[:row_sep], _opts[:grammar])
+    _opts[:grammar] = (_opts[:grammar] == "strict") ? 0 : 1
     self.generate_line_no_check(data, _opts)
   end
 
@@ -131,9 +139,10 @@ class FastestCSV
   def initialize(io, _opts = {})
 
     _opts = {
-      col_sep:    DEFAULT_FIELDSEP,
-      row_sep:    DEFAULT_LINEBREAK,
-      quote_char: DEFAULT_FIELDQUOTE,
+      col_sep:      DEFAULT_FIELDSEP,
+      row_sep:      DEFAULT_LINEBREAK,
+      quote_char:   DEFAULT_FIELDQUOTE,
+      grammar:      "relaxed",
       force_quotes: false,
       force_utf8:   false,
       write_buffer_lines: DEFAULT_WRITE_BUFFER_LINES,
@@ -141,7 +150,9 @@ class FastestCSV
       field_count:        nil,
     }.merge(_opts)
 
-    self.class.assert_valid_grammar(_opts[:col_sep], _opts[:quote_char], _opts[:row_sep])
+    self.class.assert_valid_grammar(_opts[:col_sep], _opts[:quote_char], _opts[:row_sep], _opts[:grammar])
+    _opts[:grammar] = (_opts[:grammar] == "strict") ? 0 : 1
+
     @opts = _opts
 
     @io = io
@@ -154,6 +165,7 @@ class FastestCSV
   def col_sep; @opts[:col_sep]; end
   def row_sep; @opts[:row_sep]; end
   def quote_char; @opts[:quote_char]; end
+  def grammar; @opts[:grammar]; end
   def force_quotes; @opts[:force_quotes]; end
   def force_utf8; @opts[:force_utf8]; end
   def write_buffer_lines; @opts[:write_buffer_lines]; end

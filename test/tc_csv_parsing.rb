@@ -103,6 +103,8 @@ class TestCSVParsing < Minitest::Test
     ].each do |csv_test|
       assert_equal(csv_test.last,
                    FastestCSV.parse_line(csv_test.first))
+      assert_equal(csv_test.last,
+                   FastestCSV.parse_line(csv_test.first, grammar: "strict"))
     end
 
   end
@@ -131,6 +133,8 @@ class TestCSVParsing < Minitest::Test
     ].each do |csv_test|
       assert_equal(csv_test.last,
                    FastestCSV.parse_line(csv_test.first))
+      assert_equal(csv_test.last,
+                   FastestCSV.parse_line(csv_test.first, grammar: "strict"))
     end
   end
 
@@ -146,8 +150,11 @@ class TestCSVParsing < Minitest::Test
       [%Q{"a\r\na","one CRLF"},            ["a\r\na", 'one CRLF']],
       [%Q{"a\r\n\r\na","two CRLFs"},       ["a\r\n\r\na", 'two CRLFs']],
       [%Q{with blank,"start\n\nfinish"\n}, ['with blank', "start\n\nfinish"]],
-    ].each do |edge_case|
-      assert_equal(edge_case.last, FastestCSV.parse_line(edge_case.first))
+    ].each do |csv_test|
+      assert_equal(csv_test.last,
+                   FastestCSV.parse_line(csv_test.first))
+      assert_equal(csv_test.last,
+                   FastestCSV.parse_line(csv_test.first, grammar: "strict"))
     end
   end
 
@@ -163,16 +170,10 @@ class TestCSVParsing < Minitest::Test
     ].each do |csv_test|
       assert_equal(csv_test.last,
                    FastestCSV.parse_line(csv_test.first))
+      assert_equal(csv_test.last,
+                   FastestCSV.parse_line(csv_test.first, grammar: "strict"))
     end
   end
-
-  # Unlike FasterCSV, we are not doing much in the way of error checking,
-  # and so we don't have malformed CSV checks. But perhaps we should, if we
-  # can trade it off for speed?
-
-  # assert_raise(FastestCSV::MalformedCSVError) do
-  #   FastestCSV.parse_line("1,\"23\"4\"5\", 6")
-  # end
 
   def test_null_edge_cases
     # Technically not valid CSV to have a null character - review this in the
@@ -181,7 +182,10 @@ class TestCSVParsing < Minitest::Test
     [ [ %Q{\x00,a}, ["\x00", "a"] ],
       [ %Q{a,\x00,b,,c} , ["a", "\x00", "b", nil, "c"] ],
     ].each do |csv_test|
-      assert_equal(csv_test.last, FastestCSV.parse_line(csv_test.first))
+      assert_equal(csv_test.last,
+                   FastestCSV.parse_line(csv_test.first))
+      assert_equal(csv_test.last,
+                   FastestCSV.parse_line(csv_test.first, grammar: "strict"))
     end
   end
 

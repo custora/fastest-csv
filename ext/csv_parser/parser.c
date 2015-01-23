@@ -16,10 +16,13 @@
 #define IN_QUOTED 1
 #define QUOTE_IN_QUOTED 2
 
+typedef enum modes {STRICT, RELAXED} grammar_mode_t;
+
 static VALUE mCsvParser;
 
 static VALUE parse_line(VALUE self, VALUE str,
-                        VALUE sep_char, VALUE quote_char, VALUE linebreak_char) {
+                        VALUE sep_char, VALUE quote_char, VALUE linebreak_char,
+                        VALUE grammar_code) {
 
     VALUE array = rb_ary_new2(DEF_ARRAY_LEN);
     int state = 0;
@@ -31,6 +34,20 @@ static VALUE parse_line(VALUE self, VALUE str,
     const char *quotec     = RSTRING_PTR(quote_char);
     const char *linebreakc = RSTRING_PTR(linebreak_char);
     const char *ptr        = RSTRING_PTR(str);
+
+    grammar_mode_t mode;
+
+    if (!FIXNUM_P(grammar_code))
+        rb_raise(rb_eArgError, "grammar_code must be 0 or 1");
+
+    switch(FIX2INT(grammar_code)) {
+        case 0:
+            mode = STRICT;
+            break;
+        case 1:
+            mode = RELAXED;
+            break;
+    }
 
     int crlf = strcmp(linebreakc, "\r\n") == 0 ? 1 : 0;
 
@@ -52,8 +69,11 @@ static VALUE parse_line(VALUE self, VALUE str,
     for (i = 0; i < len; i++)
     {
         c = ptr[i];
+
+        /* if encounter a separator */
         if (c == sepc[0]) {
             if (state == UNQUOTED) {
+                /* start new field */
                 rb_ary_push(array, (index == 0 ? Qnil: rb_str_new(value, index)));
                 index = 0;
             }
@@ -61,44 +81,80 @@ static VALUE parse_line(VALUE self, VALUE str,
                 value[index++] = c;
             }
             else if (state == QUOTE_IN_QUOTED) {
+                /* start new field */
                 rb_ary_push(array, rb_str_new(value, index));
                 index = 0;
                 state = UNQUOTED;
             }
+        }
+
         /* if encounter a quote */
-        } else if (c == quotec[0]) {
-            if (state == UNQUOTED) {
+        else if (c == quotec[0]) {
+            if (state == UNQUOTED && index == 0) {
+                /* opening quote */
                 state = IN_QUOTED;
             }
-            else if (state == 1) {
+            else if (state == UNQUOTED && mode == RELAXED) {
+                /* incorrectly placed quote in unquoted field, but in relaxed mode */
+                value[index++] = c;
+            }
+            else if (state == IN_QUOTED) {
+                /* start of possible quote termination or escape */
                 state = QUOTE_IN_QUOTED;
             }
             else if (state == QUOTE_IN_QUOTED) {
-                value[index++] = c;  /* escaped quote */
+                /* quote escape completed */
+                value[index++] = c;
                 state = IN_QUOTED;
             }
-        /* if encounter a line break - only legal linebreaks are CR, LF, and CR LF */
-        } else if ((c == 13 && linebreakc[0] == 13) ||
-                   (c == 10 && linebreakc[0] == 10 && !crlf)) {
+            else {
+                rb_raise(rb_eRuntimeError, "CSV syntax error (strict grammar): %s", ptr);
+            }
+        }
+
+        /* if encounter a single-char line break (CR or LF) */
+        else if ((c == 13 && linebreakc[0] == 13) || (!crlf && c == 10 && linebreakc[0] == 10)) {
             if (state == IN_QUOTED) {
                 value[index++] = c;
             }
             else {
-                i = len;  /* only parse first line if multiline */
+                /* only parse up to the first linebreak, rest is silently ignored
+                 * maybe make this an exception in the future? */
+                i = len;
             }
-        } else if (crlf && i < len-1 && c == 10 && ptr[i+1] == 13) {
+        }
+
+        /* if encounter a CRLF line break */
+        else if (crlf && i < len-1 && c == 10 && ptr[i+1] == 13) {
             if (state == IN_QUOTED) {
                 value[index] = c;
                 value[index+1] = ptr[i+1];
                 index += 2;
             }
             else {
-                i = len;  /* only parse first line if multiline */
+                /* only parse up to the first linebreak, rest is silently ignored
+                 * maybe make this an exception in the future? */
+                i = len;
             }
-        /* not a special character */
-        } else {
+        }
+
+        /* if we are quote in quoted, but the next character was not a quote,
+         * separator, or line break (which is a syntax error, but we'll let
+         * slide if we're being relaxed) */
+        else if (state == QUOTE_IN_QUOTED) {
+            if (mode == RELAXED) {
+                value[index++] = quotec[0];
+                value[index++] = c;
+            }
+            else {
+                rb_raise(rb_eRuntimeError, "CSV syntax error (strict grammar): %s", ptr);
+            }
+        }
+
+        else {
             value[index++] = c;
         }
+
     }
 
     if (state == UNQUOTED) {
@@ -106,6 +162,14 @@ static VALUE parse_line(VALUE self, VALUE str,
     }
     else if (state == QUOTE_IN_QUOTED) {
         rb_ary_push(array, rb_str_new(value, index));
+    }
+    else if (mode == RELAXED) {
+        /* MySQL LOAD DATA INFILE syntax will accept this, but we will not.
+         * Revisit this in the future. */
+        rb_raise(rb_eRuntimeError, "CSV syntax error (relaxed grammar), unexpected end of line: %s", ptr);
+    }
+    else {
+        rb_raise(rb_eRuntimeError, "CSV syntax error (strict grammar): %s", ptr);
     }
 
     free(value);
@@ -245,6 +309,6 @@ static VALUE generate_line(VALUE self, VALUE array,
 void Init_csv_parser()
 {
     mCsvParser = rb_define_module("CsvParser");
-    rb_define_module_function(mCsvParser, "parse_line", parse_line, 4);
+    rb_define_module_function(mCsvParser, "parse_line", parse_line, 5);
     rb_define_module_function(mCsvParser, "generate_line", generate_line, 5);
 }

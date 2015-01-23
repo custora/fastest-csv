@@ -5,9 +5,7 @@ require 'csv'
 
 class TestCSVRelaxed < Minitest::Test
 
-  # Unlike FasterCSV, we are not doing much in the way of error checking,
-  # and so we don't have malformed CSV checks. But perhaps we should, if we
-  # can trade it off for speed?
+  PATH = File.join(File.dirname(__FILE__), "test_data_relaxed.csv")
 
   def test_basic_strict
     assert_raises RuntimeError do
@@ -51,7 +49,17 @@ class TestCSVRelaxed < Minitest::Test
 
   def test_relaxed_io_parsing
 
-    # TODO: test if we now read files in properly
+    expected_output = [
+      ["a","b","c\""],
+      ["a","b,fakec\nthis is a very long field\nit still hasn't ended\nok it will now end here","c"],
+      ["a","b","c\"","d"],
+      ["a","b","c\"","don't lose me"],
+      ["a","b","c\"","don't lose me either"],
+    ]
+
+    parsed_output = FastestCSV.read(PATH)
+
+    assert_equal(expected_output, parsed_output)
 
   end
 

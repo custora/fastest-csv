@@ -47,7 +47,7 @@ static VALUE parse_line(VALUE self, VALUE str,
     VALUE output = rb_ary_new2(2);
     VALUE array = rb_ary_new2(DEF_ARRAY_LEN);
 
-    int state = 0;
+    int state = UNQUOTED;
     int index = 0;
     int i;
     char c;
@@ -83,6 +83,9 @@ static VALUE parse_line(VALUE self, VALUE str,
         rb_ary_push(output, Qtrue);
         return output;
     }
+
+    if (FIX2INT(start_in_quoted) != 0)
+        state = IN_QUOTED;
 
     for (i = 0; i < len; i++)
     {

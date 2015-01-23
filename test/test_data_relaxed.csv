@@ -1,0 +1,8 @@
+a,b,c"
+a,"b,fakec
+this is a very long field
+it still hasn't ended
+ok it will now end here",c
+a,b,c",d
+a,b,c",don't lose me
+a,b,c",don't lose me either

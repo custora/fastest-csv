@@ -2,6 +2,7 @@
 # 0.7
 
 - Replace positional arguments in `parse_line` and `generate_line` and also `open, `foreach`, etc. with options hash in a manner similar to Ruby's CSV
+- Permit a grammar flag 'strict' vs. 'relaxed'. The former raises exceptions on incorrect CSV syntax, the latter accepts some syntactically incorrect CSV in a similar manner to MySQL's LOAD INFILE
 - Explicitly define supported CSV grammar, do more careful checking for validity
 - `shift` and `<<` now respect user-specified field separator and quote characters
 - Removed `to_csv` and its helpers `escapable_chars_including_comma` and `escapable_chars_not_comma`

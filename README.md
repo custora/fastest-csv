@@ -6,8 +6,6 @@ Fast CSV reader/writer for MRI Ruby. Supports any delimiter and fast (buffered) 
 
 If grammar is 'strict', understands an extension of the CSV grammar defined in [RFC4180](https://tools.ietf.org/html/rfc4180), with the important modification that the default linebreak character is LF, not CR LF. If grammar is 'relaxed', some syntactical errors are OK and are interpreted in a similar manner to MySQL's LOAD DATA INFILE. See `grammar.md` for the full details. Not designed to support Excel-formatted CSVs, although it might work.
 
-Java support is de facto deprecated as we don't use it and don't keep it updated.
-
 ## Usage
 
 Parse single line (anything after a newline is ignored)

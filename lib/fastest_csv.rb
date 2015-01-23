@@ -1,5 +1,4 @@
-# This loads either csv_parser.so, csv_parser.bundle or
-# csv_parser.jar, depending on your Ruby platform and OS
+
 require 'csv_parser'
 require 'stringio'
 
@@ -16,11 +15,6 @@ class FastestCSV
   DEFAULT_FIELDSEP = ","
   DEFAULT_FIELDQUOTE = "\""
   DEFAULT_LINEBREAK = "\n"
-
-  #if RUBY_PLATFORM =~ /java/
-  #  require 'jruby'
-  #  org.brightcode.CsvParserService.new.basicLoad(JRuby.runtime)
-  #end
 
   def self.version
     VERSION

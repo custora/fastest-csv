@@ -8,6 +8,7 @@
 - Removed `to_csv` and its helpers `escapable_chars_including_comma` and `escapable_chars_not_comma`
 - Add options `check_field_count` and `field_count` to catch CSV files with unequal numbers of fields
 - Permit NUL char to be output by `generate_line`
+- Java support removed, we don't use it and do not want to need to spend on its upkeep for now
 - Tidied up tests
 
 # 0.6.4

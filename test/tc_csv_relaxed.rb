@@ -36,7 +36,6 @@ class TestCSVRelaxed < Minitest::Test
       [%Q{a,b",",c"},  ['a', 'b"', ',c']],
       [%Q{a,"b,",c"},  ['a', 'b,', 'c"']],
       [%Q{a,b",c"},    ['a', 'b"', 'c"']],
-      # [%Q{a,b,"c},     ['a', 'b"', 'c"']],   # We don't handle this case yet in relaxed, we raise an exception; revisit this
     ].each do |csv_test|
       assert_equal(csv_test.last,
                    FastestCSV.parse_line(csv_test.first))  # default: relaxed grammar
@@ -51,15 +50,21 @@ class TestCSVRelaxed < Minitest::Test
 
     expected_output = [
       ["a","b","c\""],
+      ["a","b\"","c"],
       ["a","b,fakec\nthis is a very long field\nit still hasn't ended\nok it will now end here","c"],
+      ["a","b", "long field\nproperly escaped quote: \"\nthis one \" not proper but ok because relaxed\nok it will now end here"],
       ["a","b","c\"","d"],
       ["a","b","c\"","don't lose me"],
       ["a","b","c\"","don't lose me either"],
+      ["a","b","c","runaway at \"eof\""],   # note this is different from MySQL LOAD DATA INFILE
     ]
 
     parsed_output = FastestCSV.read(PATH)
-
     assert_equal(expected_output, parsed_output)
+
+    FastestCSV.foreach(PATH) do |line|
+      assert_equal(expected_output.shift, line)
+    end
 
   end
 

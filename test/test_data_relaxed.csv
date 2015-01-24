@@ -1,8 +1,14 @@
 a,b,c"
+a,b",c
 a,"b,fakec
 this is a very long field
 it still hasn't ended
 ok it will now end here",c
+a,b,"long field
+properly escaped quote: ""
+this one " not proper but ok because relaxed
+ok it will now end here"
 a,b,c",d
 a,b,c",don't lose me
 a,b,c",don't lose me either
+a,b,c,"runaway at "eof""

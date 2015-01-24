@@ -49,7 +49,7 @@ class TestCSVSpeed < Minitest::Test
     puts "FastestCSV read and parse: #{fastest_csv_time}"
     puts
 
-    assert(fastest_csv_time < csv_time / 3)
+    assert(fastest_csv_time < csv_time)
 
   end
 

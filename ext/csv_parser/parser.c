@@ -166,6 +166,7 @@ static VALUE parse_line(VALUE self, VALUE str,
             if (mode == RELAXED) {
                 value[index++] = quotec[0];
                 value[index++] = c;
+                state = IN_QUOTED;
             }
             else {
                 rb_raise(rb_eRuntimeError, "CSV syntax error (strict grammar): %s", ptr);

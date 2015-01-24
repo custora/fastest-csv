@@ -1,4 +1,9 @@
 
+# 0.7.1
+
+- Change `parse_line` to also return true/false depending on if the last field was a complete record (i.e. no runaway quote) or not; allow `parse_line` to parse partial lines and start off in IN_QUOTED state
+- Change shift to just `gets` up to the next row separator and have `parse_line` concatenate together lines with incomplete fields until a line is completed
+
 # 0.7
 
 - Replace positional arguments in `parse_line` and `generate_line` and also `open, `foreach`, etc. with options hash in a manner similar to Ruby's CSV

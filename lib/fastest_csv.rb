@@ -6,8 +6,6 @@ require 'stringio'
 class FastestCSV
 
   DEFAULT_WRITE_BUFFER_LINES = 250_000
-  UTF_8_STRING = "UTF-8"
-  BINARY_STRING = "binary"
   SINGLE_SPACE = ' '
 
   # See grammar.md; these are default values
@@ -135,6 +133,9 @@ class FastestCSV
   # Create new FastestCSV wrapping the specified IO object
   def initialize(io, _opts = {})
 
+    # for << we will try these encodings in sequence if the string
+    # produced by generate_line is not valid UTF-8 (default, try ISO-8859-1)
+
     _opts = {
       col_sep:      DEFAULT_FIELDSEP,
       row_sep:      DEFAULT_LINEBREAK,
@@ -145,6 +146,7 @@ class FastestCSV
       write_buffer_lines: DEFAULT_WRITE_BUFFER_LINES,
       check_field_count:  false,
       field_count:        nil,
+      non_utf8_encodings: ["ISO-8859-1"]
     }.merge(_opts)
 
     self.class.assert_valid_grammar(_opts[:col_sep], _opts[:quote_char], _opts[:row_sep], _opts[:grammar])
@@ -167,6 +169,7 @@ class FastestCSV
   def force_utf8; @opts[:force_utf8]; end
   def write_buffer_lines; @opts[:write_buffer_lines]; end
   def check_field_count; @opts[:check_field_count]; end
+  def non_utf8_encodings; @opts[:non_utf8_encodings]; end
 
   def field_count; @field_count; end
 
@@ -211,7 +214,17 @@ class FastestCSV
 
   def <<(_array)
     @current_buffer_count += 1
-    @current_write_buffer << FastestCSV.generate_line_no_check(_array, @opts)
+    line = FastestCSV.generate_line_no_check(_array, @opts)  # should be UTF-8
+    encoding_i = 0
+    while !line.valid_encoding?
+      # try encodings in sequence until one works, or raise exception if none work
+      if encoding_i >= non_utf8_encodings.length
+        raise RuntimeError, "Unable to encode following non-UTF-8 string to UTF-8 using any of #{non_utf8_encodings}:\n#{line}"
+      end
+      line = line.force_encoding(non_utf8_encodings[encoding_i]).encode("UTF-8")
+      encoding_i += 1
+    end
+    @current_write_buffer << line
     if(@current_buffer_count == @opts[:write_buffer_lines])
       flush(false)
     end

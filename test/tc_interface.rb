@@ -196,14 +196,14 @@ class TestFastestCSVInterface < Minitest::Test
 
   end
 
-  def test_force_utf8
+  def test_is_utf8
 
     expected = Array.new(@expected)
-    FastestCSV.foreach(@path_basic, force_utf8: true) do |data|
+    FastestCSV.foreach(@path_basic) do |data|
       data.each do |field|
         assert_equal(Encoding::UTF_8, field.encoding)
       end
-      assert_equal(Encoding::UTF_8, FastestCSV.generate_line(data, force_utf8: true).encoding)
+      assert_equal(Encoding::UTF_8, FastestCSV.generate_line(data).encoding)
     end
 
   end

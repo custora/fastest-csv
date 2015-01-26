@@ -16,6 +16,9 @@
 #define IN_QUOTED 1
 #define QUOTE_IN_QUOTED 2
 
+/* http://tenderlovemaking.com/2009/06/26/string-encoding-in-ruby-1-9-c-extensions.html */
+#define DEFAULT_STRING_ENCODING "UTF-8"
+
 typedef enum modes {STRICT, RELAXED} grammar_mode_t;
 
 static VALUE mCsvParser;
@@ -46,10 +49,12 @@ static VALUE parse_line(VALUE self, VALUE str,
 
     VALUE output = rb_ary_new2(2);
     VALUE array = rb_ary_new2(DEF_ARRAY_LEN);
+    VALUE field;
 
     int state = UNQUOTED;
     int index = 0;
     int i;
+    int default_encoding = rb_enc_find_index(DEFAULT_STRING_ENCODING);
     char c;
 
     const char *sepc       = RSTRING_PTR(sep_char);
@@ -95,7 +100,14 @@ static VALUE parse_line(VALUE self, VALUE str,
         if (c == sepc[0]) {
             if (state == UNQUOTED) {
                 /* start new field */
-                rb_ary_push(array, (index == 0 ? Qnil: rb_str_new(value, index)));
+                if (index == 0) {
+                    rb_ary_push(array, Qnil);
+                }
+                else {
+                    field = rb_str_new(value, index);
+                    rb_enc_associate_index(field, default_encoding);
+                    rb_ary_push(array, field);
+                }
                 index = 0;
             }
             else if (state == IN_QUOTED) {
@@ -103,7 +115,9 @@ static VALUE parse_line(VALUE self, VALUE str,
             }
             else if (state == QUOTE_IN_QUOTED) {
                 /* start new field */
-                rb_ary_push(array, rb_str_new(value, index));
+                field = rb_str_new(value, index);
+                rb_enc_associate_index(field, default_encoding);
+                rb_ary_push(array, field);
                 index = 0;
                 state = UNQUOTED;
             }
@@ -179,23 +193,31 @@ static VALUE parse_line(VALUE self, VALUE str,
 
     }
 
+    /* last field in the input */
+
     if (state == UNQUOTED) {
-        rb_ary_push(array, (index == 0 ? Qnil: rb_str_new(value, index)));
-        rb_ary_push(output, array);
-        rb_ary_push(output, Qtrue);
-    }
-    else if (state == QUOTE_IN_QUOTED) {
-        rb_ary_push(array, rb_str_new(value, index));
-        rb_ary_push(output, array);
-        rb_ary_push(output, Qtrue);
+        if (index == 0) {
+            rb_ary_push(array, Qnil);
+        }
+        else {
+            field = rb_str_new(value, index);
+            rb_enc_associate_index(field, default_encoding);
+            rb_ary_push(array, field);
+        }
     }
     else {
-        rb_ary_push(array, rb_str_new(value, index));
-        rb_ary_push(output, array);
-        rb_ary_push(output, Qfalse);
+        field = rb_str_new(value, index);
+        rb_enc_associate_index(field, default_encoding);
+        rb_ary_push(array, field);
     }
 
     free(value);
+    rb_ary_push(output, array);
+
+    /* we have an incomplete row if we're IN_QUOTED */
+    if (state == IN_QUOTED) rb_ary_push(output, Qfalse);
+    else rb_ary_push(output, Qtrue);
+
     return output;
 }
 
@@ -215,6 +237,7 @@ static VALUE generate_line(VALUE self, VALUE array,
 
     int crlf = strcmp(linebreakc, "\r\n") == 0 ? 1 : 0;
     int force_q;
+    int default_encoding = rb_enc_find_index(DEFAULT_STRING_ENCODING);
 
     if (NIL_P(sepc))
         return Qnil;
@@ -325,6 +348,7 @@ static VALUE generate_line(VALUE self, VALUE array,
     }
 
     result = rb_str_cat2(result, linebreakc);
+    rb_enc_associate_index(result, default_encoding);
     return result;
 
 }

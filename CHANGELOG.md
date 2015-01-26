@@ -1,4 +1,9 @@
 
+# 0.7.2
+
+- `parse_line` and `generate_line` output UTF-8-encoded text
+- Permit users to supply a list of encodings for `<<` that are tried in sequence so that proper UTF-8 gets written out. Note that `shift` will not do this right now, it'll read in a UTF-8 encoded string but if the input stream is not UTF-8 then you'll just have a string with invalid encoding
+
 # 0.7.1
 
 - Change `parse_line` to also return true/false depending on if the last field was a complete record (i.e. no runaway quote) or not; allow `parse_line` to parse partial lines and start off in IN_QUOTED state

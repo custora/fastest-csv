@@ -188,7 +188,10 @@ class FastestCSV
   end
   alias_method :readlines, :read
 
-  # Read next line from the wrapped IO and return as array or nil at EOF
+  # Read next line from the wrapped IO and return as array or nil at EOF.
+  # Gets read in as UTF-8, it's up to you right now to correct this if this is
+  # incorrect.
+
   def shift
     line = @io.gets(@opts[:row_sep])
     if line
@@ -211,6 +214,10 @@ class FastestCSV
 
   alias_method :gets,     :shift
   alias_method :readline, :shift
+
+  # Write array to the wrapped IO. Will try to write as UTF-8, but if it is not
+  # validly encoded, will cycle through non_utf8_encodings until it gets a
+  # valid encoding, then will force_encode and reencode to UTF-8
 
   def <<(_array)
     @current_buffer_count += 1

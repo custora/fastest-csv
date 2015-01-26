@@ -103,12 +103,14 @@ class FastestCSV
   end
 
   def self.parse_line_no_check(line, _opts, _start_in_quoted=0)
-    CsvParser.parse_line(line,
-                         _opts[:col_sep],
-                         _opts[:quote_char],
-                         _opts[:row_sep],
-                         _opts[:grammar],
-                         _start_in_quoted)
+    parsed_line = CsvParser.parse_line(line,
+                                       _opts[:col_sep],
+                                       _opts[:quote_char],
+                                       _opts[:row_sep],
+                                       _opts[:grammar],
+                                       _start_in_quoted)
+    parsed_line[0] = parsed_line[0].map{|x| x.nil? ? nil : x.force_encoding("utf-8")} if _opts[:force_utf8]
+    parsed_line
   end
 
   def self.generate_line(data, _opts = {})
@@ -121,7 +123,9 @@ class FastestCSV
     }.merge(_opts)
     assert_valid_grammar(_opts[:col_sep], _opts[:quote_char], _opts[:row_sep], _opts[:grammar])
     _opts[:grammar] = (_opts[:grammar] == "strict") ? 0 : 1
-    self.generate_line_no_check(data, _opts)
+    generated_line = self.generate_line_no_check(data, _opts)
+    generated_line = generated_line.force_encoding("utf-8") if _opts[:force_utf8]
+    generated_line
   end
 
   def self.generate_line_no_check(data, _opts)

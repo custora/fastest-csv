@@ -174,24 +174,36 @@ class TestFastestCSVInterface < Minitest::Test
   def test_shift
 
     expected = Array.new(@expected)
-    FastestCSV.open(@path_basic, "r+") do |csv|
+    FastestCSV.open(@path_basic, "r") do |csv|
       assert_equal(expected.shift, csv.shift)
       assert_equal(expected.shift, csv.shift)
       assert_equal(nil, csv.shift)
     end
 
     expected = Array.new(@expected)
-    FastestCSV.open(@path_crlf, "r+", row_sep: "\r\n") do |csv|
+    FastestCSV.open(@path_crlf, "r", row_sep: "\r\n") do |csv|
       assert_equal(expected.shift, csv.shift)
       assert_equal(expected.shift, csv.shift)
       assert_equal(nil, csv.shift)
     end
 
     expected = Array.new(@expected)
-    FastestCSV.open(@path_cr, "r+", row_sep: "\r") do |csv|
+    FastestCSV.open(@path_cr, "r", row_sep: "\r") do |csv|
       assert_equal(expected.shift, csv.shift)
       assert_equal(expected.shift, csv.shift)
       assert_equal(nil, csv.shift)
+    end
+
+  end
+
+  def test_force_utf8
+
+    expected = Array.new(@expected)
+    FastestCSV.foreach(@path_basic, force_utf8: true) do |data|
+      data.each do |field|
+        assert_equal(Encoding::UTF_8, field.encoding)
+      end
+      assert_equal(Encoding::UTF_8, FastestCSV.generate_line(data, force_utf8: true).encoding)
     end
 
   end

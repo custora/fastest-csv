@@ -1,3 +1,5 @@
+# 0.7.3
+- `foreach_raw_line` to get unparsed semantic lines from file.
 
 # 0.7.2
 

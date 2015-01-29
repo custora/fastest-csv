@@ -29,7 +29,15 @@ class TestFastestCSVInterface < Minitest::Test
       file << "4,5\r"
     end
 
+    @path_cr_with_quoted_cr = File.join(base_dir, "temp_test_data_cr_with_quoted_cr.csv")
+    File.open(@path_cr_with_quoted_cr, "w") do |file|
+      file << "1,2,\"3\r4\"\r"
+      file << "4,5\r"
+    end
+
+
     @expected = [%w{1 2 3}, %w{4 5}]
+    @expected_quoted_cr = ["1,2,\"3\r4\"\r", "4,5\r"]
 
   end
 
@@ -37,6 +45,7 @@ class TestFastestCSVInterface < Minitest::Test
     File.unlink(@path_basic)
     File.unlink(@path_crlf)
     File.unlink(@path_cr)
+    File.unlink(@path_cr_with_quoted_cr)
   end
 
 
@@ -81,6 +90,13 @@ class TestFastestCSVInterface < Minitest::Test
       assert_equal(expected.shift, row)
     end
 
+  end
+
+  def test_foreach_raw_line
+    expected = Array.new(@expected_quoted_cr)
+    FastestCSV.foreach_raw_line(@path_cr_with_quoted_cr, row_sep: "\r") do |row|
+      assert_equal(expected.shift, row)
+    end
   end
 
   def test_open_and_close

@@ -44,6 +44,12 @@ class FastestCSV
     end
   end
 
+  def self.foreach_raw_line(path, _opts={}, &block)
+    open(path, "rb:UTF-8", _opts) do |reader|
+      reader.each_raw_line(&block)
+    end
+  end
+
   # Opens a csv file. Pass a FastestCSV instance to the provided block,
   # or return it when no block is provided.
   # Note that if you want to pass options, you'll have to pass a mode too,
@@ -180,6 +186,12 @@ class FastestCSV
     end
   end
 
+  def each_raw_line
+    while row = shift_raw_line
+      yield row
+    end
+  end
+
   # Read all remaining lines from the wrapped IO into an array of arrays
   def read
     table = Array.new
@@ -207,6 +219,20 @@ class FastestCSV
         raise "Default field count is #{@field_count}, but the following line parsed into #{parsed_line.length} entries: \n#{line}"
       end
       parsed_line
+    else
+      nil
+    end
+  end
+
+  def shift_raw_line
+    line = @io.gets(@opts[:row_sep])
+    if line
+      complete_line = self.class.parse_line_no_check(line, @opts)[1]
+      while !complete_line && (next_line = @io.gets(@opts[:row_sep])) do
+        line += next_line
+        complete_line = self.class.parse_line_no_check(line, @opts, 1)[1]
+      end
+      line
     else
       nil
     end

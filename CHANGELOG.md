@@ -1,3 +1,6 @@
+# 0.7.4
+- Make use of rb:bom mode so that we ignore UTF-8 byte order marks if they are present.
+
 # 0.7.3
 - `foreach_raw_line` to get unparsed semantic lines from file.
 

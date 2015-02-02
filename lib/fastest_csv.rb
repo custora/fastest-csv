@@ -39,13 +39,13 @@ class FastestCSV
 
   # Pass each line of the specified +path+ as array to the provided +block+
   def self.foreach(path, _opts={}, &block)
-    open(path, "rb:UTF-8", _opts) do |reader|
+    open(path, "r:bom|utf-8", _opts) do |reader|
       reader.each(&block)
     end
   end
 
   def self.foreach_raw_line(path, _opts={}, &block)
-    open(path, "rb:UTF-8", _opts) do |reader|
+    open(path, "r:bom|utf-8", _opts) do |reader|
       reader.each_raw_line(&block)
     end
   end
@@ -55,7 +55,9 @@ class FastestCSV
   # Note that if you want to pass options, you'll have to pass a mode too,
   # otherwise the opts will be assigned to mode. Maybe move to named args in a
   # later version.
-  def self.open(path, mode = "rb:UTF-8", _opts = {})
+
+  # rb:bom will ignore the first character if it's an invisible Byte order mark
+  def self.open(path, mode = "rb:bom|utf-8", _opts = {})
     csv = new(File.open(path, mode), _opts)
     if block_given?
       begin
@@ -70,7 +72,7 @@ class FastestCSV
 
   # Read all lines from the specified +path+ into an array of arrays
   def self.read(path, _opts={})
-    open(path, "rb:UTF-8", _opts) { |csv| csv.read }
+    open(path, "r:bom|utf-8", _opts) { |csv| csv.read }
   end
 
   # Alias for FastestCSV.read

@@ -203,5 +203,21 @@ class TestCSVGenerating < Minitest::Test
     end
   end
 
+  def test_nil_quote_char_cases
+
+    # We don't support nil quote_char on generate_line right now, so this just
+    # ensures that we raise an exception...
+
+    assert_raises ArgumentError do
+      FastestCSV.generate_line(['"a"', '"b"'], quote_char: nil)
+    end
+
+    # and that this one does not.
+
+    assert_equal(FastestCSV.generate_line(['"a"', '"b"']),
+                 '"""a""","""b"""' + "\n")
+
+
+  end
 
 end

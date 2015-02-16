@@ -22,8 +22,8 @@ class FastestCSV
     if !((_fieldsep.is_a? String) && _fieldsep.length == 1)
       raise "separator character must be a string of length 1"
     end
-    if !((_fieldquote.is_a? String) && _fieldquote.length == 1)
-      raise "quote character must be a string of length 1"
+    if !(_fieldquote.nil? || ((_fieldquote.is_a? String) && _fieldquote.length == 1))
+      raise "quote character must be a string of length 1 (or nil, but only if we are parsing-only)"
     end
     if !(["\r", "\n", "\r\n"].include? _linebreak)
       raise "linebreak must be CR, LF, or CR LF"

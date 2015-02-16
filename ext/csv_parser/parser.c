@@ -53,14 +53,17 @@ static VALUE parse_line(VALUE self, VALUE str,
 
     int state = UNQUOTED;
     int index = 0;
+    int crlf;
+    int nil_quote_char = 0;   /* if true, we will not regard any char as a quoter */
+
     int i;
     int default_encoding = rb_enc_find_index(DEFAULT_STRING_ENCODING);
     char c;
 
-    const char *sepc       = RSTRING_PTR(sep_char);
-    const char *quotec     = RSTRING_PTR(quote_char);
-    const char *linebreakc = RSTRING_PTR(linebreak_char);
-    const char *ptr        = RSTRING_PTR(str);
+    const char *sepc;
+    const char *quotec;
+    const char *linebreakc;
+    const char *ptr;
 
     grammar_mode_t mode;
 
@@ -76,21 +79,43 @@ static VALUE parse_line(VALUE self, VALUE str,
             break;
     }
 
-    int crlf = strcmp(linebreakc, "\r\n") == 0 ? 1 : 0;
-
     int len = (int) RSTRING_LEN(str);  /* cast to prevent warning in 64-bit OS */
     char *value = (char *)malloc(len * sizeof(char) + 1);
     if (value == NULL)
         rb_raise(rb_eNoMemError, "could not allocate memory for parsed field value");
 
-    if (NIL_P(str) || NIL_P(sepc) || NIL_P(quotec) || len == 0) {
+    /* input verification */
+
+    if (NIL_P(sep_char))
+        rb_raise(rb_eArgError, "sep_char may not be nil");
+    sepc = RSTRING_PTR(sep_char);
+
+    if (NIL_P(quote_char)) {
+        if (FIX2INT(start_in_quoted) != 0)
+            rb_raise(rb_eArgError, "quote_char may not be nil if starting in quoted (start_in_quoted = 0)");
+        else
+            nil_quote_char = 1;
+    }
+    else {
+        quotec = RSTRING_PTR(quote_char);
+    }
+
+    linebreakc = RSTRING_PTR(linebreak_char);
+    crlf = strcmp(linebreakc, "\r\n") == 0 ? 1 : 0;
+
+    if (NIL_P(str) || len == 0) {
         rb_ary_push(output, Qnil);
         rb_ary_push(output, Qtrue);
         return output;
     }
+    else {
+        ptr = RSTRING_PTR(str);
+    }
 
     if (FIX2INT(start_in_quoted) != 0)
         state = IN_QUOTED;
+
+    /* parsing starts here */
 
     for (i = 0; i < len; i++)
     {
@@ -124,7 +149,7 @@ static VALUE parse_line(VALUE self, VALUE str,
         }
 
         /* if encounter a quote */
-        else if (c == quotec[0]) {
+        else if (!nil_quote_char && c == quotec[0]) {
             if (state == UNQUOTED && index == 0) {
                 /* opening quote */
                 state = IN_QUOTED;
@@ -178,7 +203,7 @@ static VALUE parse_line(VALUE self, VALUE str,
          * slide if we're being relaxed) */
         else if (state == QUOTE_IN_QUOTED) {
             if (mode == RELAXED) {
-                value[index++] = quotec[0];
+                if (!nil_quote_char) value[index++] = quotec[0];
                 value[index++] = c;
                 state = IN_QUOTED;
             }
@@ -231,18 +256,26 @@ static VALUE generate_line(VALUE self, VALUE array,
     long array_i, raw_i, converted_i, array_str_val_len;
     VALUE array_val, result;
 
-    const char *sepc       = RSTRING_PTR(sep_char);
-    const char *quotec     = RSTRING_PTR(quote_char);
-    const char *linebreakc = RSTRING_PTR(linebreak_char);
+    const char *sepc;
+    const char *quotec;
+    const char *linebreakc;
 
-    int crlf = strcmp(linebreakc, "\r\n") == 0 ? 1 : 0;
+    int crlf;
     int force_q;
     int default_encoding = rb_enc_find_index(DEFAULT_STRING_ENCODING);
 
-    if (NIL_P(sepc))
-        return Qnil;
-    if (NIL_P(quotec))
-        return Qnil;
+    /* input verification */
+
+    if (NIL_P(sep_char))
+        rb_raise(rb_eArgError, "sep_char may not be nil");
+    sepc = RSTRING_PTR(sep_char);
+
+    if (NIL_P(quote_char))
+        rb_raise(rb_eArgError, "quote_char may not be nil");
+    quotec = RSTRING_PTR(quote_char);
+
+    linebreakc = RSTRING_PTR(linebreak_char);
+    crlf = strcmp(linebreakc, "\r\n") == 0 ? 1 : 0;
 
     if (TYPE(array) != T_ARRAY)
         rb_raise(rb_eTypeError, "first argument must be an array");

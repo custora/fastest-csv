@@ -189,4 +189,18 @@ class TestCSVParsing < Minitest::Test
     end
   end
 
+  def test_nil_quote_char_cases
+    [ [%Q{a,b},      ['a', 'b'],          ['a', 'b']],
+      [%Q{a,"b"},    ['a', '"b"'],        ['a', 'b']],
+      [%Q{"a,b"},    ['"a', 'b"'],        ['a,b']],
+      [%Q{"a,",b"},  ['"a', '"', 'b"'],   ['a,', 'b"']],  # this will only work with a quote char if grammar is relaxed
+      [%Q{"a,"",b"}, ['"a', '""', 'b"'],  ['a,",b']],
+    ].each do |csv_test|
+      assert_equal(csv_test[1],
+                   FastestCSV.parse_line(csv_test.first, quote_char: nil))
+      assert_equal(csv_test[2],
+                   FastestCSV.parse_line(csv_test.first, quote_char: '"'))
+    end
+  end
+
 end

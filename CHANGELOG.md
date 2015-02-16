@@ -1,3 +1,6 @@
+# 0.7.5
+- `quote_char` parameter can be nil, which permits calling `parse_line` without any quote char at all. Running `generate_line` this way will result in an exception though.
+
 # 0.7.4
 - Make use of rb:bom mode so that we ignore UTF-8 byte order marks if they are present.
 

@@ -103,18 +103,9 @@ class FastestCSV
     }.merge(_opts)
     assert_valid_grammar(_opts[:col_sep], _opts[:quote_char], _opts[:row_sep], _opts[:grammar])
     _opts[:grammar] = (_opts[:grammar] == "strict") ? 0 : 1
-    output = self.parse_line_no_check(line, _opts)
+    output = CsvParser.parse_line(line, _opts[:col_sep], _opts[:quote_char], _opts[:row_sep], _opts[:grammar], 0)
     raise RuntimeError, "Incomplete CSV line under strict grammar: #{line}" if _opts[:grammar] == 0 && !output[1]
     output[0]
-  end
-
-  def self.parse_line_no_check(line, _opts, _start_in_quoted=0)
-    CsvParser.parse_line(line,
-                         _opts[:col_sep],
-                         _opts[:quote_char],
-                         _opts[:row_sep],
-                         _opts[:grammar],
-                         _start_in_quoted)
   end
 
   def self.generate_line(data, _opts = {})
@@ -169,21 +160,27 @@ class FastestCSV
 
   end
 
-  def col_sep; @opts[:col_sep]; end
-  def row_sep; @opts[:row_sep]; end
-  def quote_char; @opts[:quote_char]; end
-  def grammar; @opts[:grammar]; end
-  def force_quotes; @opts[:force_quotes]; end
-  def force_utf8; @opts[:force_utf8]; end
-  def write_buffer_lines; @opts[:write_buffer_lines]; end
-  def check_field_count; @opts[:check_field_count]; end
-  def non_utf8_encodings; @opts[:non_utf8_encodings]; end
+  def col_sep; @col_sep ||= @opts[:col_sep]; end
+  def row_sep; @row_sep ||= @opts[:row_sep]; end
+  def quote_char; @quote_char ||= @opts[:quote_char]; end
+  def grammar; @grammar ||= @opts[:grammar]; end
+  def force_quotes; @force_quotes ||= @opts[:force_quotes]; end
+  def force_utf8; @force_utf8 ||= @opts[:force_utf8]; end
+  def write_buffer_lines; @write_buffer_lines ||= @opts[:write_buffer_lines]; end
+  def check_field_count; @check_field_count ||= @opts[:check_field_count]; end
+  def non_utf8_encodings; @non_utf8_encodings ||= @opts[:non_utf8_encodings]; end
 
   def field_count; @field_count; end
 
   # Read from the wrapped IO passing each line as array to the specified block
   def each
-    while row = shift
+    row_sep = @opts[:row_sep]
+    check_field_count = @opts[:check_field_count]
+    col_sep = @opts[:col_sep]
+    quote_char = @opts[:quote_char]
+    grammar = @opts[:grammar]
+
+    while row = shift(row_sep, check_field_count, col_sep, quote_char, grammar)
       yield row
     end
   end
@@ -206,12 +203,12 @@ class FastestCSV
   # Gets read in as UTF-8, it's up to you right now to correct this if this is
   # incorrect.
 
-  def shift
-    line = @io.gets(@opts[:row_sep])
+  def shift(row_sep = @opts[:row_sep], check_field_count = @opts[:check_field_count], col_sep = @opts[:col_sep], quote_char = @opts[:quote_char], grammar = @opts[:grammar])
+    line = @io.gets(row_sep)
     if line
-      parsed_line, complete_line = self.class.parse_line_no_check(line, @opts)
-      while !complete_line && (line = @io.gets(@opts[:row_sep])) do
-        parsed_partial_line, complete_line = self.class.parse_line_no_check(line, @opts, 1)
+      parsed_line, complete_line = CsvParser.parse_line(line, col_sep, quote_char, row_sep, grammar, 0)
+      while !complete_line && (line = @io.gets(row_sep)) do
+        parsed_partial_line, complete_line = CsvParser.parse_line(line, col_sep, quote_char, row_sep, grammar, 1)
         parsed_line[parsed_line.length-1] += parsed_partial_line.shift
         parsed_line += parsed_partial_line
       end
@@ -227,13 +224,15 @@ class FastestCSV
   end
 
   def shift_raw_line
-    line = @io.gets(@opts[:row_sep])
+    line = @io.gets(row_sep)
     if line
-      complete_line = self.class.parse_line_no_check(line, @opts)[1]
-      while !complete_line && (next_line = @io.gets(@opts[:row_sep])) do
+      complete_line = CsvParser.parse_line(line, col_sep, quote_char, row_sep, grammar, 0)[1]
+
+      while !complete_line && (next_line = @io.gets(row_sep)) do
         line += next_line
-        complete_line = self.class.parse_line_no_check(line, @opts, 1)[1]
+        complete_line = CsvParser.parse_line(line, col_sep, quote_char, row_sep, grammar, 1)[1]
       end
+
       line
     else
       nil

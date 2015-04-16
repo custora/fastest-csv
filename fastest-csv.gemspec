@@ -20,5 +20,6 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency 'rake-compiler', '~> 0.9'
   gem.add_development_dependency 'minitest', '~> 5.4'
   gem.add_development_dependency 'yard', '~> 0.8.7'
+  gem.add_development_dependency 'ruby-prof'
 
 end

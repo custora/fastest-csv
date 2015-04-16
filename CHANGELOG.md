@@ -1,3 +1,6 @@
+# 0.7.6
+- Speed improvements to `parse_line`, removed `parse_line_no_check`
+
 # 0.7.5
 - `quote_char` parameter can be nil, which permits calling `parse_line` without any quote char at all. Running `generate_line` this way will result in an exception though.
 

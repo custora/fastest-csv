@@ -180,12 +180,16 @@ class FastestCSV
     quote_char = @opts[:quote_char]
     grammar = @opts[:grammar]
 
+    shift(row_sep, check_field_count, col_sep, quote_char, grammar) if @opts[:header]
+    
     while row = shift(row_sep, check_field_count, col_sep, quote_char, grammar)
       yield row
     end
   end
 
   def each_raw_line
+    shift_raw_line if @opts[:header]
+
     while row = shift_raw_line
       yield row
     end

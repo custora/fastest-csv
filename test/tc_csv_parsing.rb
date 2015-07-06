@@ -202,5 +202,22 @@ class TestCSVParsing < Minitest::Test
                    FastestCSV.parse_line(csv_test.first, quote_char: '"'))
     end
   end
+  
+  def test_header_skipping
+    path = "test/test_data_relaxed.csv"
+    rows_with_header = []
+    rows_without_header = []
+    FastestCSV.foreach(path) { |row| rows_with_header << row }
+    FastestCSV.foreach(path, skip_header: true) { |row| rows_without_header << row }
+    refute_equal(rows_with_header, rows_without_header)
+    assert_equal(rows_with_header[1..-1], rows_without_header)
+
+    rows_with_header = []
+    rows_without_header = []
+    FastestCSV.foreach_raw_line(path) { |row| rows_with_header << row }
+    FastestCSV.foreach_raw_line(path, skip_header: true) { |row| rows_without_header << row }
+    refute_equal(rows_with_header, rows_without_header)
+    assert_equal(rows_with_header[1..-1], rows_without_header)
+  end
 
 end

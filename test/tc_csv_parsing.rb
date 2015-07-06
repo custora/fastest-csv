@@ -204,19 +204,20 @@ class TestCSVParsing < Minitest::Test
   end
   
   def test_header_skipping
+    path = "test/test_data_relaxed.csv"
     rows_with_header = []
     rows_without_header = []
-    FastestCSV.foreach("test/test_data_relaxed.csv") { |row| rows_with_header << row }
-    FastestCSV.foreach("test/test_data_relaxed.csv", skip_header: true) { |row| rows_without_header << row }
-    assert(rows_with_header != rows_without_header, "output was the same with/without skip_header option")
-    assert_equal(1, rows_with_header.length - rows_without_header.length)
+    FastestCSV.foreach(path) { |row| rows_with_header << row }
+    FastestCSV.foreach(path, skip_header: true) { |row| rows_without_header << row }
+    refute_equal(rows_with_header, rows_without_header)
+    assert_equal(rows_with_header[1..-1], rows_without_header)
 
     rows_with_header = []
     rows_without_header = []
-    FastestCSV.foreach_raw_line("test/test_data_relaxed.csv") { |row| rows_with_header << row }
-    FastestCSV.foreach_raw_line("test/test_data_relaxed.csv", skip_header: true) { |row| rows_without_header << row }
-    assert(rows_with_header != rows_without_header, "output was the same with/without skip_header option")
-    assert_equal(1, rows_with_header.length - rows_without_header.length)
+    FastestCSV.foreach_raw_line(path) { |row| rows_with_header << row }
+    FastestCSV.foreach_raw_line(path, skip_header: true) { |row| rows_without_header << row }
+    refute_equal(rows_with_header, rows_without_header)
+    assert_equal(rows_with_header[1..-1], rows_without_header)
   end
 
 end

@@ -305,7 +305,7 @@ static VALUE generate_line(VALUE self, VALUE array,
                 array_str_val_len = RSTRING_LEN(array_val);
             }
             else {
-                array_str_val = "";
+                array_str_val = (char *)"";
                 array_str_val_len = 0;
             }
 

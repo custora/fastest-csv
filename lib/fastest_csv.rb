@@ -152,25 +152,16 @@ class FastestCSV
     _opts[:grammar] = (_opts[:grammar] == "strict") ? 0 : 1
 
     @opts = _opts
+    _opts.each do |k, v|
+      instance_variable_set(:"@#{k}", v)
+      self.class.send(:attr_reader, k) if !self.respond_to?(k)
+    end
 
     @io = io
     @current_buffer_count = 0
     @current_write_buffer = ""
     @field_count = @opts[:field_count]
-
   end
-
-  def col_sep; @col_sep ||= @opts[:col_sep]; end
-  def row_sep; @row_sep ||= @opts[:row_sep]; end
-  def quote_char; @quote_char ||= @opts[:quote_char]; end
-  def grammar; @grammar ||= @opts[:grammar]; end
-  def force_quotes; @force_quotes ||= @opts[:force_quotes]; end
-  def force_utf8; @force_utf8 ||= @opts[:force_utf8]; end
-  def write_buffer_lines; @write_buffer_lines ||= @opts[:write_buffer_lines]; end
-  def check_field_count; @check_field_count ||= @opts[:check_field_count]; end
-  def non_utf8_encodings; @non_utf8_encodings ||= @opts[:non_utf8_encodings]; end
-
-  def field_count; @field_count; end
 
   # Read from the wrapped IO passing each line as array to the specified block
   def each

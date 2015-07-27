@@ -117,16 +117,7 @@ class FastestCSV
       force_quotes: false,
     }.merge(_opts)
     assert_valid_grammar(_opts[:col_sep], _opts[:quote_char], _opts[:row_sep], _opts[:grammar])
-    _opts[:grammar] = (_opts[:grammar] == "strict") ? 0 : 1
-    self.generate_line_no_check(data, _opts)
-  end
-
-  def self.generate_line_no_check(data, _opts)
-    CsvParser.generate_line(data.map{|x| x.nil? ? x : x.to_s},
-                            _opts[:col_sep],
-                            _opts[:quote_char],
-                            _opts[:row_sep],
-                            !!_opts[:force_quotes])
+    CsvParser.generate_line(data, _opts[:col_sep], _opts[:quote_char], _opts[:row_sep], !!_opts[:force_quotes])
   end
 
   # Create new FastestCSV wrapping the specified IO object
@@ -243,7 +234,7 @@ class FastestCSV
 
   def <<(_array)
     @current_buffer_count += 1
-    line = FastestCSV.generate_line_no_check(_array, @opts)  # should be UTF-8
+    line = CsvParser.generate_line(_array, col_sep, quote_char, row_sep, force_quotes) # should be UTF-8
     encoding_i = 0
     while !line.valid_encoding?
       # try encodings in sequence until one works, or raise exception if none work

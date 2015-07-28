@@ -220,4 +220,13 @@ class TestCSVGenerating < Minitest::Test
 
   end
 
+  def test_non_string_cases
+    [
+      ["1,3.14,", [ 1, 3.14, nil ]],
+      ["2015-10-26,{},test", [ Date.new(2015, 10, 26), {}, "test"]]
+    ].each do |csv_test|
+      assert_equal(csv_test.first + "\n", FastestCSV.generate_line(csv_test.last))
+    end
+  end
+
 end

@@ -255,6 +255,7 @@ static VALUE generate_line(VALUE self, VALUE array,
     int quoting;
     long array_i, raw_i, converted_i, array_str_val_len;
     VALUE array_val, result;
+    ID to_s = rb_intern("to_s");
 
     const char *sepc;
     const char *quotec;
@@ -298,86 +299,75 @@ static VALUE generate_line(VALUE self, VALUE array,
         quoting = force_q;
         array_val = rb_ary_entry(array, array_i);
 
-        if (TYPE(array_val) == T_STRING || TYPE(array_val) == T_NIL) {
-
-            if (TYPE(array_val) == T_STRING) {
-                array_str_val = StringValuePtr(array_val);
-                array_str_val_len = RSTRING_LEN(array_val);
-            }
-            else {
-                array_str_val = (char *)"";
-                array_str_val_len = 0;
-            }
-
-            /* malloc: at most
-             *   2*length (every character doubled)
-             *   + 2 (delims)
-             *   + 1 (possible leading separator char)
-             */
-
-            converted_val = (char *)malloc(array_str_val_len * sizeof(char) * 2 + 1);
-            if (converted_val == NULL)
-                rb_raise(rb_eNoMemError, "could not allocate memory for converted field value");
-
-            converted_i = 2;
-            raw_i = 0;
-
-            while (raw_i < array_str_val_len) {
-                c = array_str_val[raw_i];
-                /* if not quoting and quote_char, sep, or line break, we need to
-                 * start quoting
-                 */
-                if (!quoting && (c == quotec[0] || c == sepc[0] || c == 13 || c == 10)) {
-                    quoting = 1;
-                }
-                /* if quote_char, dupe it */
-                if (c == quotec[0]) {
-                    converted_val[converted_i] = c;
-                    converted_val[converted_i+1] = c;
-                    converted_i += 2;
-                }
-                /* else just add it */
-                else {
-                    converted_val[converted_i] = c;
-                    converted_i += 1;
-                }
-                raw_i++;
-            }
-
-            /* depending on quoting and whether or not we need to append the
-             * leading separator, strcpy from different points in converted_val
-             */
-
-            if (quoting) {
-                converted_val[1] = quotec[0];
-                converted_val[converted_i] = quotec[0];
-                if (array_i > 0) {
-                    converted_val[0] = sepc[0];
-                    result = rb_str_cat(result, converted_val, converted_i+1);
-                }
-                else {
-                    result = rb_str_cat(result, &converted_val[1], converted_i);
-                }
-
-            }
-            else {
-                if (array_i > 0) {
-                    converted_val[1] = sepc[0];
-                    result = rb_str_cat(result, &converted_val[1], converted_i-1);
-                }
-                else {
-                    result = rb_str_cat(result, &converted_val[2], converted_i-2);
-                }
-            }
-
-            free(converted_val);
-
+        if (TYPE(array_val) != T_STRING) {
+            array_val = rb_funcall(array_val, to_s, 0);
         }
 
+        array_str_val = StringValuePtr(array_val);
+        array_str_val_len = RSTRING_LEN(array_val);
+
+        /* malloc: at most
+         *   2*length (every character doubled)
+         *   + 2 (delims)
+         *   + 1 (possible leading separator char)
+         */
+
+        converted_val = (char *)malloc(array_str_val_len * sizeof(char) * 2 + 1);
+        if (converted_val == NULL)
+            rb_raise(rb_eNoMemError, "could not allocate memory for converted field value");
+
+        converted_i = 2;
+        raw_i = 0;
+
+        while (raw_i < array_str_val_len) {
+            c = array_str_val[raw_i];
+            /* if not quoting and quote_char, sep, or line break, we need to
+             * start quoting
+             */
+            if (!quoting && (c == quotec[0] || c == sepc[0] || c == 13 || c == 10)) {
+                quoting = 1;
+            }
+            /* if quote_char, dupe it */
+            if (c == quotec[0]) {
+                converted_val[converted_i] = c;
+                converted_val[converted_i+1] = c;
+                converted_i += 2;
+            }
+            /* else just add it */
+            else {
+                converted_val[converted_i] = c;
+                converted_i += 1;
+            }
+            raw_i++;
+        }
+
+        /* depending on quoting and whether or not we need to append the
+         * leading separator, strcpy from different points in converted_val
+         */
+
+        if (quoting) {
+            converted_val[1] = quotec[0];
+            converted_val[converted_i] = quotec[0];
+            if (array_i > 0) {
+                converted_val[0] = sepc[0];
+                result = rb_str_cat(result, converted_val, converted_i+1);
+            }
+            else {
+                result = rb_str_cat(result, &converted_val[1], converted_i);
+            }
+
+        }
         else {
-            rb_raise(rb_eTypeError, "array should only contain strings or nil");
+            if (array_i > 0) {
+                converted_val[1] = sepc[0];
+                result = rb_str_cat(result, &converted_val[1], converted_i-1);
+            }
+            else {
+                result = rb_str_cat(result, &converted_val[2], converted_i-2);
+            }
         }
 
+        free(converted_val);
     }
 
     result = rb_str_cat2(result, linebreakc);

@@ -1,7 +1,7 @@
 #!/usr/bin/env rake
 require "bundler/gem_tasks"
 
-spec = Gem::Specification.load('fastest-csv.gemspec')
+spec = Gem::Specification.load('fastest_csv.gemspec')
 
 if RUBY_PLATFORM =~ /java/
   require 'rake/javaextensiontask'

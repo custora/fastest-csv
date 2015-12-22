@@ -1,6 +1,7 @@
 AllCops:
   Include:
     - '**/Rakefile'
+    - '**/*.gemspec'
   Exclude:
     - 'tmp/**/*'
 

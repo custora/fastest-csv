@@ -117,7 +117,7 @@ class FastestCSV
       force_quotes: false,
     }.merge(_opts)
     assert_valid_grammar(_opts[:col_sep], _opts[:quote_char], _opts[:row_sep], _opts[:grammar])
-    CsvParser.generate_line(data, _opts[:col_sep], _opts[:quote_char], _opts[:row_sep], !!_opts[:force_quotes])
+    CsvParser.generate_line(data, _opts[:col_sep], _opts[:quote_char], _opts[:row_sep], _opts[:force_quotes])
   end
 
   # Create new FastestCSV wrapping the specified IO object
@@ -163,16 +163,20 @@ class FastestCSV
 
     shift(row_sep, check_field_count, col_sep, quote_char, grammar) if @opts[:skip_header]
 
-    while row = shift(row_sep, check_field_count, col_sep, quote_char, grammar)
+    row = shift(row_sep, check_field_count, col_sep, quote_char, grammar)
+    while row
       yield row
+      row = shift(row_sep, check_field_count, col_sep, quote_char, grammar)
     end
   end
 
   def each_raw_line
     shift_raw_line if @opts[:skip_header]
 
-    while row = shift_raw_line
+    row = shift_raw_line
+    while row
       yield row
+      row = shift_raw_line
     end
   end
 
@@ -188,7 +192,8 @@ class FastestCSV
   # Gets read in as UTF-8, it's up to you right now to correct this if this is
   # incorrect.
 
-  def shift(row_sep = @opts[:row_sep], check_field_count = @opts[:check_field_count], col_sep = @opts[:col_sep], quote_char = @opts[:quote_char], grammar = @opts[:grammar])
+  def shift(row_sep = @opts[:row_sep], check_field_count = @opts[:check_field_count], col_sep = @opts[:col_sep],
+            quote_char = @opts[:quote_char], grammar = @opts[:grammar])
     line = @io.gets(row_sep)
     if line
       parsed_line, complete_line = CsvParser.parse_line(line, col_sep, quote_char, row_sep, grammar, 0)

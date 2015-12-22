@@ -99,8 +99,8 @@ class TestFastestCSVInterface < Minitest::Test
     csv.close
     assert(csv.closed?)
 
-    ret = FastestCSV.open(@path_basic) do |csv|
-      assert_instance_of(FastestCSV, csv)
+    ret = FastestCSV.open(@path_basic) do |csv_file|
+      assert_instance_of(FastestCSV, csv_file)
       "Return value."
     end
     assert(csv.closed?)
@@ -196,7 +196,6 @@ class TestFastestCSVInterface < Minitest::Test
   end
 
   def test_is_utf8
-    expected = Array.new(@expected)
     FastestCSV.foreach(@path_basic) do |data|
       data.each do |field|
         assert_equal(Encoding::UTF_8, field.encoding)
@@ -230,10 +229,10 @@ class TestFastestCSVInterface < Minitest::Test
   def test_check_field_count
     FastestCSV.open(@path_basic, "r", check_field_count: true) do |f|
       assert_nil(f.field_count)
-      row1 = f.shift
+      f.shift
       assert_equal(3, f.field_count)
       assert_raises RuntimeError do
-        row2 = f.shift
+        f.shift
       end
     end
 
@@ -244,7 +243,7 @@ class TestFastestCSVInterface < Minitest::Test
 
     FastestCSV.open(@path_basic, "r", check_field_count: true, field_count: 4) do |f|
       assert_raises RuntimeError do
-        row = f.shift
+        f.shift
       end
     end
 

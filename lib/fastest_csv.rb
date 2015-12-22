@@ -18,21 +18,24 @@ class FastestCSV
     VERSION
   end
 
-  def self.assert_valid_grammar(_fieldsep, _fieldquote, _linebreak, _grammar)
-    if !((_fieldsep.is_a? String) && _fieldsep.length == 1)
+  def self.assert_valid_grammar(fieldsep, fieldquote, linebreak, grammar)
+    if !((fieldsep.is_a? String) && fieldsep.length == 1)
       fail "separator character must be a string of length 1"
     end
-    if !(_fieldquote.nil? || ((_fieldquote.is_a? String) && _fieldquote.length == 1))
+    if !(fieldquote.nil? || ((fieldquote.is_a? String) && fieldquote.length == 1))
       fail "quote character must be a string of length 1 (or nil, but only if we are parsing-only)"
     end
-    if !(["\r", "\n", "\r\n"].include? _linebreak)
+    if !(["\r", "\n", "\r\n"].include? linebreak)
       fail "linebreak must be CR, LF, or CR LF"
     end
-    if (_fieldsep == _fieldquote)
+    if (fieldsep == fieldquote)
       fail "separator and quote characters cannot be the same"
     end
-    if !(["strict", "relaxed"].include? _grammar)
-      fail "grammar must be 'strict' or 'relaxed'"
+    if !(['strict', 'relaxed', 'c_escaped'].include? grammar)
+      fail "grammar must be 'strict', 'relaxed', or 'c_escaped'"
+    end
+    if grammar == "c_escaped" && fieldquote != DEFAULT_FIELDQUOTE
+      fail "C-escaped grammar must use default field quote #{DEFAULT_FIELDQUOTE}"
     end
     true
   end
@@ -99,25 +102,48 @@ class FastestCSV
       col_sep:    DEFAULT_FIELDSEP,
       row_sep:    DEFAULT_LINEBREAK,
       quote_char: DEFAULT_FIELDQUOTE,
-      grammar:    "relaxed",
+      grammar:    'relaxed',
     }.merge(_opts)
     assert_valid_grammar(_opts[:col_sep], _opts[:quote_char], _opts[:row_sep], _opts[:grammar])
-    _opts[:grammar] = (_opts[:grammar] == "strict") ? 0 : 1
-    output = CsvParser.parse_line(line, _opts[:col_sep], _opts[:quote_char], _opts[:row_sep], _opts[:grammar], 0)
+    _opts[:grammar] =
+      case _opts[:grammar]
+      when 'strict'
+        0
+      when 'relaxed'
+        1
+      when 'c_escaped'
+        2
+      else
+        fail "grammar must be 'strict', 'relaxed', or 'c_escaped'"
+      end
+    output = CsvParser.parse_line(
+      line,
+      _opts[:col_sep],
+      _opts[:quote_char],
+      _opts[:row_sep],
+      _opts[:grammar],
+      0,
+    )
     fail "Incomplete CSV line under strict grammar: #{line}" if _opts[:grammar] == 0 && !output[1]
     output[0]
   end
 
   def self.generate_line(data, _opts = {})
     _opts = {
-      col_sep:    DEFAULT_FIELDSEP,
-      row_sep:    DEFAULT_LINEBREAK,
-      quote_char: DEFAULT_FIELDQUOTE,
-      grammar:    "relaxed",
+      col_sep:      DEFAULT_FIELDSEP,
+      row_sep:      DEFAULT_LINEBREAK,
+      quote_char:   DEFAULT_FIELDQUOTE,
+      grammar:      'relaxed',
       force_quotes: false,
     }.merge(_opts)
     assert_valid_grammar(_opts[:col_sep], _opts[:quote_char], _opts[:row_sep], _opts[:grammar])
-    CsvParser.generate_line(data, _opts[:col_sep], _opts[:quote_char], _opts[:row_sep], _opts[:force_quotes])
+    CsvParser.generate_line(
+      data,
+      _opts[:col_sep],
+      _opts[:quote_char],
+      _opts[:row_sep],
+      _opts[:force_quotes],
+    )
   end
 
   # Create new FastestCSV wrapping the specified IO object
@@ -129,7 +155,7 @@ class FastestCSV
       col_sep:      DEFAULT_FIELDSEP,
       row_sep:      DEFAULT_LINEBREAK,
       quote_char:   DEFAULT_FIELDQUOTE,
-      grammar:      "relaxed",
+      grammar:      'relaxed',
       force_quotes: false,
       force_utf8:   false,
       write_buffer_lines: DEFAULT_WRITE_BUFFER_LINES,
@@ -139,7 +165,17 @@ class FastestCSV
     }.merge(_opts)
 
     self.class.assert_valid_grammar(_opts[:col_sep], _opts[:quote_char], _opts[:row_sep], _opts[:grammar])
-    _opts[:grammar] = (_opts[:grammar] == "strict") ? 0 : 1
+    _opts[:grammar] =
+      case _opts[:grammar]
+      when 'strict'
+        0
+      when 'relaxed'
+        1
+      when 'c_escaped'
+        2
+      else
+        fail "grammar must be 'strict', 'relaxed', or 'c_escaped'"
+      end
 
     @opts = _opts
     _opts.each do |k, v|

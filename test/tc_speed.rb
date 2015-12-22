@@ -76,33 +76,4 @@ class TestCSVSpeed < Minitest::Test
     assert(fastest_csv_time < csv_time / 3)
   end
 
-  # BIG_DATA = "123456789\n" * 1024
-
-  # We don't have bad CSV error checking in this gem as it currently stands, so
-  # this part is commented out
-
-  # def test_the_parse_fails_fast_when_it_can_for_unquoted_fields
-  #   assert_parse_errors_out('valid,fields,bad start"' + BIG_DATA)
-  # end
-
-  # def test_the_parse_fails_fast_when_it_can_for_unescaped_quotes
-  #   assert_parse_errors_out('valid,fields,"bad start"unescaped' + BIG_DATA)
-  # end
-
-  # def test_field_size_limit_controls_lookahead
-  #   assert_parse_errors_out( 'valid,fields,"' + BIG_DATA + '"',
-  #                            :field_size_limit => 2048 )
-  # end
-
-  # private
-
-  # def assert_parse_errors_out(*args)
-  #   assert_raise(FasterCSV::MalformedCSVError) do
-  #     Timeout.timeout(0.2) do
-  #       FasterCSV.parse(*args)
-  #       fail("Parse didn't error out")
-  #     end
-  #   end
-  # end
-
 end

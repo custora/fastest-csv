@@ -1,3 +1,8 @@
+# 0.8
+- Added `c_escaped` grammar option to handle C-style escape sequences
+- Renamed the gem 'fastest_csv', in accordance with [Rubygems guidelines](http://guides.rubygems.org/name-your-gem/)
+- Cleaned up tests, imposed Rubocop
+
 # 0.7.6
 - Speed improvements to `parse_line`, removed `parse_line_no_check`
 

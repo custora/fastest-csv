@@ -105,9 +105,9 @@ class TestCSVParsing < Minitest::Test
     end
   end
 
-  # From:  http://ruby-talk.org/cgi-bin/scat.rb/ruby/ruby-core/6496
+  # From: http://ruby-talk.org/cgi-bin/scat.rb/ruby/ruby-core/6496 (URL now dead)
 
-  def test_aras_edge_cases
+  def test_edge_cases
     [ [%(a,b),               ["a", "b"]],
       [%(a,"""b"""),         ["a", "\"b\""]],
       [%(a,"""b"),           ["a", "\"b"]],
@@ -125,16 +125,7 @@ class TestCSVParsing < Minitest::Test
       [%(,"\r"),             [nil, "\r"]],
       [%("\r\n,"),           ["\r\n,"]],
       [%("\r\n,",),          ["\r\n,", nil]],
-    ].each do |csv_test|
-      assert_equal(csv_test.last,
-                   FastestCSV.parse_line(csv_test.first))
-      assert_equal(csv_test.last,
-                   FastestCSV.parse_line(csv_test.first, grammar: "strict"))
-    end
-  end
-
-  def test_rob_edge_cases
-    [ [%("a\nb"),                         ["a\nb"]],
+      [%("a\nb"),                         ["a\nb"]],
       [%("\n\n\n"),                       ["\n\n\n"]],
       [%(a,"b\n\nc"),                     ['a', "b\n\nc"]],
       [%(,"\r\n"),                        [nil, "\r\n"]],
@@ -144,16 +135,7 @@ class TestCSVParsing < Minitest::Test
       [%("a\r\na","one CRLF"),            ["a\r\na", 'one CRLF']],
       [%("a\r\n\r\na","two CRLFs"),       ["a\r\n\r\na", 'two CRLFs']],
       [%(with blank,"start\n\nfinish"\n), ['with blank', "start\n\nfinish"]],
-    ].each do |csv_test|
-      assert_equal(csv_test.last,
-                   FastestCSV.parse_line(csv_test.first))
-      assert_equal(csv_test.last,
-                   FastestCSV.parse_line(csv_test.first, grammar: "strict"))
-    end
-  end
-
-  def test_jon_edge_cases
-    [ [%(wiggle,"waggle""this",another'thing),      ["wiggle", "waggle\"this", "another'thing"]],
+      [%(wiggle,"waggle""this",another'thing),      ["wiggle", "waggle\"this", "another'thing"]],
       [%(wiggle,"waggle""this",another''thing),     ["wiggle", "waggle\"this", "another''thing"]],
       [%(wiggle,"""waggle""this,another''thing"),   ["wiggle", "\"waggle\"this,another''thing"]],
       [%(wiggle,"""waggle""this,another''thing"""), ["wiggle", "\"waggle\"this,another''thing\""]],
@@ -212,6 +194,35 @@ class TestCSVParsing < Minitest::Test
     FastestCSV.foreach_raw_line(path, skip_header: true) { |row| rows_without_header << row }
     refute_equal(rows_with_header, rows_without_header)
     assert_equal(rows_with_header[1..-1], rows_without_header)
+  end
+
+  def test_c_escaped
+    case_basic = [
+      %(Ten Thousand,10000, 2710 ,,"10,000","It's \\"10 Grand\\", baby",10K\n),
+      [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", baby", "10K" ],
+    ]
+    assert_equal(case_basic.last,
+                 FastestCSV.parse_line(case_basic.first, grammar: 'c_escaped'))
+    assert_equal(case_basic.last,
+                 FastestCSV.parse_line(case_basic.first, grammar: 'c_escaped', quote_char: '"'))
+
+    [
+      [%(a,b),               ['a', 'b']],
+      [%(a,,,),              ["a", nil, nil, nil]],
+      [%(,),                 [nil, nil]],
+      [%("",""),             ["", ""]],
+      ['a,"b\n","c\r","d\n\r"',     ['a', "b\n", "c\r", "d\n\r"]],
+      ['"a\?","b\"","c\'","d\\\\"', ['a?', 'b"', "c'", "d\\"]],
+      ['"a\a",aa,bb,"b\b"',         ['a\a', 'aa', 'bb', 'b\b']],
+    ].each do |csv_test|
+      assert_equal(csv_test.last,
+                   FastestCSV.parse_line(csv_test.first, grammar: 'c_escaped'))
+    end
+
+    assert_raises RuntimeError do
+      assert_equal(case_basic.last,
+                   FastestCSV.parse_line(case_basic.first, grammar: 'c_escaped', quote_char: '$'))
+    end
   end
 
 end

@@ -20,31 +20,31 @@ class FastestCSV
 
   def self.assert_valid_grammar(_fieldsep, _fieldquote, _linebreak, _grammar)
     if !((_fieldsep.is_a? String) && _fieldsep.length == 1)
-      raise "separator character must be a string of length 1"
+      fail "separator character must be a string of length 1"
     end
     if !(_fieldquote.nil? || ((_fieldquote.is_a? String) && _fieldquote.length == 1))
-      raise "quote character must be a string of length 1 (or nil, but only if we are parsing-only)"
+      fail "quote character must be a string of length 1 (or nil, but only if we are parsing-only)"
     end
     if !(["\r", "\n", "\r\n"].include? _linebreak)
-      raise "linebreak must be CR, LF, or CR LF"
+      fail "linebreak must be CR, LF, or CR LF"
     end
     if (_fieldsep == _fieldquote)
-      raise "separator and quote characters cannot be the same"
+      fail "separator and quote characters cannot be the same"
     end
     if !(["strict", "relaxed"].include? _grammar)
-      raise "grammar must be 'strict' or 'relaxed'"
+      fail "grammar must be 'strict' or 'relaxed'"
     end
     true
   end
 
   # Pass each line of the specified +path+ as array to the provided +block+
-  def self.foreach(path, _opts={}, &block)
+  def self.foreach(path, _opts = {}, &block)
     open(path, "r:bom|utf-8", _opts) do |reader|
       reader.each(&block)
     end
   end
 
-  def self.foreach_raw_line(path, _opts={}, &block)
+  def self.foreach_raw_line(path, _opts = {}, &block)
     open(path, "r:bom|utf-8", _opts) do |reader|
       reader.each_raw_line(&block)
     end
@@ -71,12 +71,12 @@ class FastestCSV
   end
 
   # Read all lines from the specified +path+ into an array of arrays
-  def self.read(path, _opts={})
-    open(path, "r:bom|utf-8", _opts) { |csv| csv.read }
+  def self.read(path, _opts = {})
+    open(path, "r:bom|utf-8", _opts, &:read)
   end
 
   # Alias for FastestCSV.read
-  def self.readlines(path, _opts={})
+  def self.readlines(path, _opts = {})
     read(path, _opts)
   end
 
@@ -104,7 +104,7 @@ class FastestCSV
     assert_valid_grammar(_opts[:col_sep], _opts[:quote_char], _opts[:row_sep], _opts[:grammar])
     _opts[:grammar] = (_opts[:grammar] == "strict") ? 0 : 1
     output = CsvParser.parse_line(line, _opts[:col_sep], _opts[:quote_char], _opts[:row_sep], _opts[:grammar], 0)
-    raise RuntimeError, "Incomplete CSV line under strict grammar: #{line}" if _opts[:grammar] == 0 && !output[1]
+    fail "Incomplete CSV line under strict grammar: #{line}" if _opts[:grammar] == 0 && !output[1]
     output[0]
   end
 
@@ -117,12 +117,11 @@ class FastestCSV
       force_quotes: false,
     }.merge(_opts)
     assert_valid_grammar(_opts[:col_sep], _opts[:quote_char], _opts[:row_sep], _opts[:grammar])
-    CsvParser.generate_line(data, _opts[:col_sep], _opts[:quote_char], _opts[:row_sep], !!_opts[:force_quotes])
+    CsvParser.generate_line(data, _opts[:col_sep], _opts[:quote_char], _opts[:row_sep], _opts[:force_quotes])
   end
 
   # Create new FastestCSV wrapping the specified IO object
   def initialize(io, _opts = {})
-
     # for << we will try these encodings in sequence if the string
     # produced by generate_line is not valid UTF-8 (default, try ISO-8859-1)
 
@@ -136,7 +135,7 @@ class FastestCSV
       write_buffer_lines: DEFAULT_WRITE_BUFFER_LINES,
       check_field_count:  false,
       field_count:        nil,
-      non_utf8_encodings: ["ISO-8859-1"]
+      non_utf8_encodings: ["ISO-8859-1"],
     }.merge(_opts)
 
     self.class.assert_valid_grammar(_opts[:col_sep], _opts[:quote_char], _opts[:row_sep], _opts[:grammar])
@@ -164,23 +163,27 @@ class FastestCSV
 
     shift(row_sep, check_field_count, col_sep, quote_char, grammar) if @opts[:skip_header]
 
-    while row = shift(row_sep, check_field_count, col_sep, quote_char, grammar)
+    row = shift(row_sep, check_field_count, col_sep, quote_char, grammar)
+    while row
       yield row
+      row = shift(row_sep, check_field_count, col_sep, quote_char, grammar)
     end
   end
 
   def each_raw_line
     shift_raw_line if @opts[:skip_header]
 
-    while row = shift_raw_line
+    row = shift_raw_line
+    while row
       yield row
+      row = shift_raw_line
     end
   end
 
   # Read all remaining lines from the wrapped IO into an array of arrays
   def read
-    table = Array.new
-    each {|row| table << row}
+    table = []
+    each { |row| table << row }
     table
   end
   alias_method :readlines, :read
@@ -189,23 +192,22 @@ class FastestCSV
   # Gets read in as UTF-8, it's up to you right now to correct this if this is
   # incorrect.
 
-  def shift(row_sep = @opts[:row_sep], check_field_count = @opts[:check_field_count], col_sep = @opts[:col_sep], quote_char = @opts[:quote_char], grammar = @opts[:grammar])
+  def shift(row_sep = @opts[:row_sep], check_field_count = @opts[:check_field_count], col_sep = @opts[:col_sep],
+            quote_char = @opts[:quote_char], grammar = @opts[:grammar])
     line = @io.gets(row_sep)
     if line
       parsed_line, complete_line = CsvParser.parse_line(line, col_sep, quote_char, row_sep, grammar, 0)
-      while !complete_line && (line = @io.gets(row_sep)) do
+      while !complete_line && (line = @io.gets(row_sep))
         parsed_partial_line, complete_line = CsvParser.parse_line(line, col_sep, quote_char, row_sep, grammar, 1)
-        parsed_line[parsed_line.length-1] << parsed_partial_line.shift
+        parsed_line[parsed_line.length - 1] << parsed_partial_line.shift
         parsed_line.concat(parsed_partial_line)
       end
       if check_field_count && @field_count.nil?
         @field_count = parsed_line.length
       elsif check_field_count && @field_count != parsed_line.length
-        raise "Default field count is #{@field_count}, but the following line parsed into #{parsed_line.length} entries: \n#{line}"
+        fail "Default field count is #{@field_count}, but the following line parsed into #{parsed_line.length} entries: \n#{line}"
       end
       parsed_line
-    else
-      nil
     end
   end
 
@@ -214,14 +216,12 @@ class FastestCSV
     if line
       complete_line = CsvParser.parse_line(line, col_sep, quote_char, row_sep, grammar, 0)[1]
 
-      while !complete_line && (next_line = @io.gets(row_sep)) do
+      while !complete_line && (next_line = @io.gets(row_sep))
         line += next_line
         complete_line = CsvParser.parse_line(line, col_sep, quote_char, row_sep, grammar, 1)[1]
       end
 
       line
-    else
-      nil
     end
   end
 
@@ -239,13 +239,13 @@ class FastestCSV
     until line.valid_encoding?
       # try encodings in sequence until one works, or raise exception if none work
       if encoding_i >= non_utf8_encodings.length
-        raise RuntimeError, "Unable to encode following non-UTF-8 string to UTF-8 using any of #{non_utf8_encodings}:\n#{line}"
+        fail "Unable to encode following non-UTF-8 string to UTF-8 using any of #{non_utf8_encodings}:\n#{line}"
       end
       line = line.force_encoding(non_utf8_encodings[encoding_i]).encode("UTF-8")
       encoding_i += 1
     end
     @current_write_buffer << line
-    if(@current_buffer_count == write_buffer_lines)
+    if (@current_buffer_count == write_buffer_lines)
       flush(false)
     end
   end

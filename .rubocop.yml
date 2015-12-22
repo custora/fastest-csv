@@ -1,0 +1,88 @@
+AllCops:
+  Include:
+    - '**/Rakefile'
+    - '**/*.gemspec'
+  Exclude:
+    - 'tmp/**/*'
+
+Metrics/LineLength:
+  Max: 140
+
+Metrics/ModuleLength:
+  Max: 2000
+
+Metrics/ClassLength:
+  Max: 2000
+
+Metrics/MethodLength:
+  Max: 2000
+
+Metrics/AbcSize:
+  Max: 2000
+
+Metrics/ParameterLists:
+  Max: 15
+  CountKeywordArgs: false
+
+Metrics/CyclomaticComplexity:
+  Max: 600
+
+Metrics/PerceivedComplexity:
+  Max: 600
+
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+Style/GuardClause:
+  Enabled: false
+
+Style/IfUnlessModifier:
+  Enabled: false
+
+Style/NegatedIf:
+  Enabled: false
+
+Style/PredicateName:
+  Enabled: false
+
+Style/RedundantSelf:
+  Enabled: false
+
+Style/SingleLineBlockParams:
+  Methods: []
+
+Style/StringLiterals:
+  Enabled: false
+
+Style/SpaceInsideBrackets:
+  Enabled: false
+
+Style/TrailingComma:
+  EnforcedStyleForMultiline: comma
+
+Style/WordArray:
+  MinSize: 5
+
+Style/EmptyLinesAroundClassBody:
+  Enabled: false
+
+Style/MultilineOperationIndentation:
+  EnforcedStyle: indented
+
+Style/PerlBackrefs:
+  Enabled: false
+
+Style/TrailingComma:
+  EnforcedStyleForMultiline: comma
+
+Lint/EndAlignment:
+  AlignWith: variable
+
+Lint/UnderscorePrefixedVariableName:
+  Enabled: false
+
+Lint/HandleExceptions:
+  Enabled: false
+
+Documentation:
+  Enabled: false

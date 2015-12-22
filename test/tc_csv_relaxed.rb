@@ -9,54 +9,51 @@ class TestCSVRelaxed < Minitest::Test
 
   def test_basic_strict
     assert_raises RuntimeError do
-      FastestCSV.parse_line(%Q{a,b"}, grammar: "strict")
+      FastestCSV.parse_line(%(a,b"), grammar: "strict")
     end
     assert_raises RuntimeError do
-      FastestCSV.parse_line(%Q{a,"b"c}, grammar: "strict")
+      FastestCSV.parse_line(%(a,"b"c), grammar: "strict")
     end
     assert_raises RuntimeError do
-      FastestCSV.parse_line(%Q{a,""b}, grammar: "strict")
+      FastestCSV.parse_line(%(a,""b), grammar: "strict")
     end
     assert_raises RuntimeError do
-      FastestCSV.parse_line(%Q{a,b""}, grammar: "strict")
+      FastestCSV.parse_line(%(a,b""), grammar: "strict")
     end
   end
 
   def test_relaxed_and_strict_parsing
-
-    [ [%Q{a,b,c"},     ['a', 'b', 'c"']],
-      [%Q{a,b,c"d},    ['a', 'b', 'c"d']],
-      [%Q{a,b,c""},    ['a', 'b', 'c""']],
-      [%Q{a,b,c"d"},   ['a', 'b', 'c"d"']],
-      [%Q{a,b,c""d"},  ['a', 'b', 'c""d"']],
-      [%Q{a,b,c"d""},  ['a', 'b', 'c"d""']],
-      [%Q{a,b,c""d""}, ['a', 'b', 'c""d""']],
-      [%Q{a,b",c"},    ['a', 'b"', 'c"']],
-      [%Q{a,b","c"},   ['a', 'b"', 'c']],
-      [%Q{a,b",",c"},  ['a', 'b"', ',c']],
-      [%Q{a,"b,",c"},  ['a', 'b,', 'c"']],
-      [%Q{a,b",c"},    ['a', 'b"', 'c"']],
+    [ [%(a,b,c"),     ['a', 'b', 'c"']],
+      [%(a,b,c"d),    ['a', 'b', 'c"d']],
+      [%(a,b,c""),    ['a', 'b', 'c""']],
+      [%(a,b,c"d"),   ['a', 'b', 'c"d"']],
+      [%(a,b,c""d"),  ['a', 'b', 'c""d"']],
+      [%(a,b,c"d""),  ['a', 'b', 'c"d""']],
+      [%(a,b,c""d""), ['a', 'b', 'c""d""']],
+      [%(a,b",c"),    ['a', 'b"', 'c"']],
+      [%(a,b","c"),   ['a', 'b"', 'c']],
+      [%(a,b",",c"),  ['a', 'b"', ',c']],
+      [%(a,"b,",c"),  ['a', 'b,', 'c"']],
+      [%(a,b",c"),    ['a', 'b"', 'c"']],
     ].each do |csv_test|
       assert_equal(csv_test.last,
-                   FastestCSV.parse_line(csv_test.first))  # default: relaxed grammar
+                   FastestCSV.parse_line(csv_test.first)) # default: relaxed grammar
       assert_raises RuntimeError do
         FastestCSV.parse_line(csv_test.first, grammar: "strict")
       end
     end
-
   end
 
   def test_relaxed_io_parsing
-
     expected_output = [
-      ["a","b","c\""],
-      ["a","b\"","c"],
-      ["a","b,fakec\nthis is a very long field\nit still hasn't ended\nok it will now end here","c"],
-      ["a","b", "long field\nproperly escaped quote: \"\nthis one \" not proper but ok because relaxed\nok it will now end here"],
-      ["a","b","c\"","d"],
-      ["a","b","c\"","don't lose me"],
-      ["a","b","c\"","don't lose me either"],
-      ["a","b","c","runaway at \"eof\""],   # note this is different from MySQL LOAD DATA INFILE
+      ["a", "b", "c\""],
+      ["a", "b\"", "c"],
+      ["a", "b,fakec\nthis is a very long field\nit still hasn't ended\nok it will now end here", "c"],
+      ["a", "b", "long field\nproperly escaped quote: \"\nthis one \" not proper but ok because relaxed\nok it will now end here"],
+      ["a", "b", "c\"", "d"],
+      ["a", "b", "c\"", "don't lose me"],
+      ["a", "b", "c\"", "don't lose me either"],
+      ["a", "b", "c", "runaway at \"eof\""], # note this is different from MySQL LOAD DATA INFILE
     ]
 
     parsed_output = FastestCSV.read(PATH)
@@ -65,7 +62,6 @@ class TestCSVRelaxed < Minitest::Test
     FastestCSV.foreach(PATH) do |line|
       assert_equal(expected_output.shift, line)
     end
-
   end
 
 end

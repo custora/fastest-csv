@@ -1,6 +1,6 @@
 AllCops:
   Include:
-    - 'Rakefile'
+    - '**/Rakefile'
 
 Metrics/LineLength:
   Max: 140

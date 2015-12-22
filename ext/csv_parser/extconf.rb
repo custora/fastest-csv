@@ -2,14 +2,14 @@
 
 require 'mkmf'
 extension_name = 'csv_parser'
-#dir_config(extension_name)
+# dir_config(extension_name)
 
-if RUBY_VERSION =~ /1.8/ then
+if RUBY_VERSION =~ /1.8/
   $CPPFLAGS += " -DRUBY_18"
 end
 
-#if CONFIG["arch"] =~ /mswin32|mingw/
+# if CONFIG["arch"] =~ /mswin32|mingw/
 #  $CFLAGS += " -march=i686"
-#end
+# end
 
 create_makefile(extension_name)

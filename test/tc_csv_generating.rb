@@ -8,26 +8,25 @@ require 'fastest_csv'
 class TestCSVGenerating < Minitest::Test
 
   def test_basic
-
     case_basic = [
-      %Q{Ten Thousand,10000, 2710 ,,"10,000","It's ""10 Grand"", baby",10K\n},
-      [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", baby", "10K" ]
+      %(Ten Thousand,10000, 2710 ,,"10,000","It's ""10 Grand"", baby",10K\n),
+      [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", baby", "10K" ],
     ]
     case_sep = [
-      %Q{Ten Thousand;10000; 2710 ;;10,000;"It's ""10 Grand"", baby";10K\n},
-      [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", baby", "10K" ]
+      %(Ten Thousand;10000; 2710 ;;10,000;"It's ""10 Grand"", baby";10K\n),
+      [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", baby", "10K" ],
     ]
     case_quote = [
-      %Q{Ten Thousand,10000, 2710 ,,'10,000','It''s "10 Grand", baby',10K\n},
-      [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", baby", "10K" ]
+      %(Ten Thousand,10000, 2710 ,,'10,000','It''s "10 Grand", baby',10K\n),
+      [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", baby", "10K" ],
     ]
     case_linebreak1 = [
-      %Q{Ten Thousand,10000, 2710 ,,"10,000","It's ""10 Grand"", baby",10K\r\n},
-      [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", baby", "10K" ]
+      %(Ten Thousand,10000, 2710 ,,"10,000","It's ""10 Grand"", baby",10K\r\n),
+      [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", baby", "10K" ],
     ]
     case_linebreak2 = [
-      %Q{Ten Thousand,10000, 2710 ,,"10,000","It's ""10 Grand"", baby",10K\r},
-      [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", baby", "10K" ]
+      %(Ten Thousand,10000, 2710 ,,"10,000","It's ""10 Grand"", baby",10K\r),
+      [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", baby", "10K" ],
     ]
 
     assert_equal(case_basic.first,
@@ -51,11 +50,9 @@ class TestCSVGenerating < Minitest::Test
                  FastestCSV.generate_line(case_linebreak1.last, row_sep: "\r\n"))
     assert_equal(CSV.generate_line(case_linebreak2.last, row_sep: "\r"),
                  FastestCSV.generate_line(case_linebreak1.last, row_sep: "\r"))
-
   end
 
   def test_std_lib_csv
-
     # with no force quote - mostly the same as parsing tests
 
     [ ["\t",                      ["\t"]],
@@ -100,29 +97,27 @@ class TestCSVGenerating < Minitest::Test
       assert_equal(csv_test.first + "\n",
                    FastestCSV.generate_line(csv_test.last, force_quotes: true))
     end
-
   end
 
   def test_aras_edge_cases
-
     # with no force quote - mostly the same as parsing tests
 
-    [ [%Q{a,b},               ["a", "b"]],
-      [%Q{a,"""b"""},         ["a", "\"b\""]],
-      [%Q{a,"""b"},           ["a", "\"b"]],
-      [%Q{a,"b"""},           ["a", "b\""]],
-      [%Q{a,"\nb"""},         ["a", "\nb\""]],
-      [%Q{a,"""\nb"},         ["a", "\"\nb"]],
-      [%Q{a,"""\nb\n"""},     ["a", "\"\nb\n\""]],
-      [%Q{a,,,},              ["a", nil, nil, nil]],
-      [%Q{,},                 [nil, nil]],
-      [%Q{,},                 ["", ""]],
-      [%Q{""""},              ["\""]],
-      [%Q{"""",},             ["\"",""]],
-      [%Q{,},                 [nil,""]],
-      [%Q{,"\r"},             [nil,"\r"]],
-      [%Q{"\r\n,"},           ["\r\n,"]],
-      [%Q{"\r\n,",},          ["\r\n,", nil]]
+    [ [%(a,b),               ["a", "b"]],
+      [%(a,"""b"""),         ["a", "\"b\""]],
+      [%(a,"""b"),           ["a", "\"b"]],
+      [%(a,"b"""),           ["a", "b\""]],
+      [%(a,"\nb"""),         ["a", "\nb\""]],
+      [%(a,"""\nb"),         ["a", "\"\nb"]],
+      [%(a,"""\nb\n"""),     ["a", "\"\nb\n\""]],
+      [%(a,,,),              ["a", nil, nil, nil]],
+      [%(,),                 [nil, nil]],
+      [%(,),                 ["", ""]],
+      [%(""""),              ["\""]],
+      [%("""",),             ["\"", ""]],
+      [%(,),                 [nil, ""]],
+      [%(,"\r"),             [nil, "\r"]],
+      [%("\r\n,"),           ["\r\n,"]],
+      [%("\r\n,",),          ["\r\n,", nil]],
     ].each do |csv_test|
       assert_equal(csv_test.first + "\n",
                    FastestCSV.generate_line(csv_test.last))
@@ -130,14 +125,13 @@ class TestCSVGenerating < Minitest::Test
 
     # with force quote
 
-    [ [%Q{"",""},             ["", ""]],
-      [%Q{"""",""},           ["\"",""]],
-      [%Q{"",""},             [nil,""]],
+    [ [%("",""),             ["", ""]],
+      [%("""",""),           ["\"", ""]],
+      [%("",""),             [nil, ""]],
     ].each do |csv_test|
       assert_equal(csv_test.first + "\n",
                    FastestCSV.generate_line(csv_test.last, force_quotes: true))
     end
-
   end
 
   def test_james_edge_cases
@@ -145,19 +139,18 @@ class TestCSVGenerating < Minitest::Test
   end
 
   def test_rob_edge_cases
-
     # with no force quote - mostly the same as parsing tests
 
-    [ [%Q{"a\nb"},                         ["a\nb"]],
-      [%Q{"\n\n\n"},                       ["\n\n\n"]],
-      [%Q{a,"b\n\nc"},                     ['a', "b\n\nc"]],
-      [%Q{,"\r\n"},                        [nil,"\r\n"]],
-      [%Q{,"\r\n."},                       [nil,"\r\n."]],
-      [%Q{"a\na",one newline},             ["a\na", 'one newline']],
-      [%Q{"a\n\na",two newlines},          ["a\n\na", 'two newlines']],
-      [%Q{"a\r\na",one CRLF},              ["a\r\na", 'one CRLF']],
-      [%Q{"a\r\n\r\na",two CRLFs},         ["a\r\n\r\na", 'two CRLFs']],
-      [%Q{with blank,"start\n\nfinish",},  ['with blank', "start\n\nfinish", ""]],
+    [ [%("a\nb"),                         ["a\nb"]],
+      [%("\n\n\n"),                       ["\n\n\n"]],
+      [%(a,"b\n\nc"),                     ['a', "b\n\nc"]],
+      [%(,"\r\n"),                        [nil, "\r\n"]],
+      [%(,"\r\n."),                       [nil, "\r\n."]],
+      [%("a\na",one newline),             ["a\na", 'one newline']],
+      [%("a\n\na",two newlines),          ["a\n\na", 'two newlines']],
+      [%("a\r\na",one CRLF),              ["a\r\na", 'one CRLF']],
+      [%("a\r\n\r\na",two CRLFs),         ["a\r\n\r\na", 'two CRLFs']],
+      [%(with blank,"start\n\nfinish",),  ['with blank', "start\n\nfinish", ""]],
     ].each do |csv_test|
       assert_equal(csv_test.first + "\n",
                    FastestCSV.generate_line(csv_test.last))
@@ -165,28 +158,27 @@ class TestCSVGenerating < Minitest::Test
 
     # with force quote
 
-    [ [%Q{"a\na","one newline"},           ["a\na", 'one newline']],
-      [%Q{"a\n\na","two newlines"},        ["a\n\na", 'two newlines']],
-      [%Q{"a\r\na","one CRLF"},            ["a\r\na", 'one CRLF']],
-      [%Q{"a\r\n\r\na","two CRLFs"},       ["a\r\n\r\na", 'two CRLFs']],
-      [%Q{"with blank","start\n\nfinish"}, ['with blank', "start\n\nfinish"]],
-      [%Q{"with blank","start\n\nfinish",""}, ['with blank', "start\n\nfinish", ""]],
+    [ [%("a\na","one newline"),           ["a\na", 'one newline']],
+      [%("a\n\na","two newlines"),        ["a\n\na", 'two newlines']],
+      [%("a\r\na","one CRLF"),            ["a\r\na", 'one CRLF']],
+      [%("a\r\n\r\na","two CRLFs"),       ["a\r\n\r\na", 'two CRLFs']],
+      [%("with blank","start\n\nfinish"), ['with blank', "start\n\nfinish"]],
+      [%("with blank","start\n\nfinish",""), ['with blank', "start\n\nfinish", ""]],
     ].each do |csv_test|
       assert_equal(csv_test.first + "\n",
                    FastestCSV.generate_line(csv_test.last, force_quotes: true))
     end
-
   end
 
   def test_jon_edge_cases
-    [ [%Q{wiggle,"waggle""this",another'thing},      ["wiggle", "waggle\"this", "another'thing"]],
-      [%Q{wiggle,"waggle""this",another''thing},     ["wiggle", "waggle\"this", "another''thing"]],
-      [%Q{wiggle,"""waggle""this,another''thing"},   ["wiggle", "\"waggle\"this,another''thing"]],
-      [%Q{wiggle,"""waggle""this,another''thing"""}, ["wiggle", "\"waggle\"this,another''thing\""]],
-      [%Q{wiggle,"""waggle""this""""","""""""another''thing"""}, ["wiggle", "\"waggle\"this\"\"", "\"\"\"another''thing\""]],
-      [%Q{wiggle,"""waggle""this"""""",""""""another''thing"""}, ["wiggle", "\"waggle\"this\"\"\",\"\"\"another''thing\""]],
-      [%Q{wiggle,"""waggle""this""""""","""""another''thing"""}, ["wiggle", "\"waggle\"this\"\"\"", "\"\"another''thing\""]],
-      [%Q{wiggle,"""""""waggle""""""""this"""""""""""""""},      ["wiggle", "\"\"\"waggle\"\"\"\"this\"\"\"\"\"\"\""]],
+    [ [%(wiggle,"waggle""this",another'thing),      ["wiggle", "waggle\"this", "another'thing"]],
+      [%(wiggle,"waggle""this",another''thing),     ["wiggle", "waggle\"this", "another''thing"]],
+      [%(wiggle,"""waggle""this,another''thing"),   ["wiggle", "\"waggle\"this,another''thing"]],
+      [%(wiggle,"""waggle""this,another''thing"""), ["wiggle", "\"waggle\"this,another''thing\""]],
+      [%(wiggle,"""waggle""this""""","""""""another''thing"""), ["wiggle", "\"waggle\"this\"\"", "\"\"\"another''thing\""]],
+      [%(wiggle,"""waggle""this"""""",""""""another''thing"""), ["wiggle", "\"waggle\"this\"\"\",\"\"\"another''thing\""]],
+      [%(wiggle,"""waggle""this""""""","""""another''thing"""), ["wiggle", "\"waggle\"this\"\"\"", "\"\"another''thing\""]],
+      [%(wiggle,"""""""waggle""""""""this"""""""""""""""),      ["wiggle", "\"\"\"waggle\"\"\"\"this\"\"\"\"\"\"\""]],
     ].each do |csv_test|
       assert_equal(csv_test.first + "\n", FastestCSV.generate_line(csv_test.last))
     end
@@ -196,15 +188,14 @@ class TestCSVGenerating < Minitest::Test
     # Technically not valid CSV to have a null character - review this in the
     # next version. Just trying to match old to_csv functionality for now, which
     # does accept and process it.
-    [ [ %Q{\x00,a}, ["\x00", "a"] ],
-      [ %Q{a,\x00,b,,c} , ["a", "\x00", "b", nil, "c"] ],
+    [ [ %(\x00,a), ["\x00", "a"] ],
+      [ %(a,\x00,b,,c), ["a", "\x00", "b", nil, "c"] ],
     ].each do |csv_test|
       assert_equal(csv_test.first + "\n", FastestCSV.generate_line(csv_test.last))
     end
   end
 
   def test_nil_quote_char_cases
-
     # We don't support nil quote_char on generate_line right now, so this just
     # ensures that we raise an exception...
 
@@ -216,14 +207,12 @@ class TestCSVGenerating < Minitest::Test
 
     assert_equal(FastestCSV.generate_line(['"a"', '"b"']),
                  '"""a""","""b"""' + "\n")
-
-
   end
 
   def test_non_string_cases
     [
       ["1,3.14,", [ 1, 3.14, nil ]],
-      ["2015-10-26,{},test", [ Date.new(2015, 10, 26), {}, "test"]]
+      ["2015-10-26,{},test", [ Date.new(2015, 10, 26), {}, "test"]],
     ].each do |csv_test|
       assert_equal(csv_test.first + "\n", FastestCSV.generate_line(csv_test.last))
     end

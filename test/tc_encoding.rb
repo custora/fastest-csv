@@ -5,7 +5,6 @@ require 'stringio'
 class TestEncoding < Minitest::Test
 
   def test_encoding
-
     # see http://w3techs.com/technologies/overview/character_encoding/all
 
     good_utf8_input    = StringIO.new("\xE2\x88\x80,a,b,c")  # the "for all" math symbol
@@ -47,7 +46,6 @@ class TestEncoding < Minitest::Test
       end
       writer.close
     end
-
   end
 
 end

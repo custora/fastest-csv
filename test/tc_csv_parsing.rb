@@ -105,9 +105,9 @@ class TestCSVParsing < Minitest::Test
     end
   end
 
-  # From:  http://ruby-talk.org/cgi-bin/scat.rb/ruby/ruby-core/6496
+  # From: http://ruby-talk.org/cgi-bin/scat.rb/ruby/ruby-core/6496 (URL now dead)
 
-  def test_aras_edge_cases
+  def test_edge_cases
     [ [%(a,b),               ["a", "b"]],
       [%(a,"""b"""),         ["a", "\"b\""]],
       [%(a,"""b"),           ["a", "\"b"]],
@@ -125,16 +125,7 @@ class TestCSVParsing < Minitest::Test
       [%(,"\r"),             [nil, "\r"]],
       [%("\r\n,"),           ["\r\n,"]],
       [%("\r\n,",),          ["\r\n,", nil]],
-    ].each do |csv_test|
-      assert_equal(csv_test.last,
-                   FastestCSV.parse_line(csv_test.first))
-      assert_equal(csv_test.last,
-                   FastestCSV.parse_line(csv_test.first, grammar: "strict"))
-    end
-  end
-
-  def test_rob_edge_cases
-    [ [%("a\nb"),                         ["a\nb"]],
+      [%("a\nb"),                         ["a\nb"]],
       [%("\n\n\n"),                       ["\n\n\n"]],
       [%(a,"b\n\nc"),                     ['a', "b\n\nc"]],
       [%(,"\r\n"),                        [nil, "\r\n"]],
@@ -144,16 +135,7 @@ class TestCSVParsing < Minitest::Test
       [%("a\r\na","one CRLF"),            ["a\r\na", 'one CRLF']],
       [%("a\r\n\r\na","two CRLFs"),       ["a\r\n\r\na", 'two CRLFs']],
       [%(with blank,"start\n\nfinish"\n), ['with blank', "start\n\nfinish"]],
-    ].each do |csv_test|
-      assert_equal(csv_test.last,
-                   FastestCSV.parse_line(csv_test.first))
-      assert_equal(csv_test.last,
-                   FastestCSV.parse_line(csv_test.first, grammar: "strict"))
-    end
-  end
-
-  def test_jon_edge_cases
-    [ [%(wiggle,"waggle""this",another'thing),      ["wiggle", "waggle\"this", "another'thing"]],
+      [%(wiggle,"waggle""this",another'thing),      ["wiggle", "waggle\"this", "another'thing"]],
       [%(wiggle,"waggle""this",another''thing),     ["wiggle", "waggle\"this", "another''thing"]],
       [%(wiggle,"""waggle""this,another''thing"),   ["wiggle", "\"waggle\"this,another''thing"]],
       [%(wiggle,"""waggle""this,another''thing"""), ["wiggle", "\"waggle\"this,another''thing\""]],

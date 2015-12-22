@@ -15,11 +15,15 @@
 #define UNQUOTED 0
 #define IN_QUOTED 1
 #define QUOTE_IN_QUOTED 2
+#define IN_QUOTED_ESCAPING 3
+#define COMPLETED_C_ESCAPED_QUOTE 4
+
+#define C_ESCAPE_CHAR '\\'
 
 /* http://tenderlovemaking.com/2009/06/26/string-encoding-in-ruby-1-9-c-extensions.html */
 #define DEFAULT_STRING_ENCODING "UTF-8"
 
-typedef enum modes {STRICT, RELAXED} grammar_mode_t;
+typedef enum modes {STRICT, RELAXED, C_ESCAPED} grammar_mode_t;
 
 static VALUE mCsvParser;
 
@@ -35,9 +39,15 @@ static VALUE mCsvParser;
  *     string of length 1
  *   linebreak_char: the string that separates rows, assumed to be either \r,
  *     \n, or \r\n
- *   grammar_code: if 0, strict CSV syntax rules are followed; if 1, single
- *     occurrences of quote_char in unquoted fields are interpreted as ordinary
- *     characters
+ *   grammar_code:
+ *     0 - strict CSV syntax rules are followed
+ *     1 - single occurrences of quote_char in unquoted fields are interpreted
+ *         as ordinary characters
+ *     2 - quoted fields will be treated as strings supporting a limited set of
+ *         C-like escape sequences: \\, \', \", \?, \n, \r, \t, and also \
+ *         followed by whatever your quote character is. A backslash followed by
+ *         any other character will be interpreted as that literal set of two
+ *         characters. The entire field must be quoted, a la strict CSV syntax.
  *   start_in_quoted: if nonzero, will start reading the line as if it were
  *     quoted; used to read lines whose contents are continuations of previous
  *     lines (due to linebreaks in the middle of a quoted field)
@@ -68,7 +78,7 @@ static VALUE parse_line(VALUE self, VALUE str,
     grammar_mode_t mode;
 
     if (!FIXNUM_P(grammar_code))
-        rb_raise(rb_eArgError, "grammar_code must be 0 or 1");
+        rb_raise(rb_eArgError, "grammar_code must be 0, 1, or 2");
 
     switch(FIX2INT(grammar_code)) {
         case 0:
@@ -77,6 +87,11 @@ static VALUE parse_line(VALUE self, VALUE str,
         case 1:
             mode = RELAXED;
             break;
+        case 2:
+            mode = C_ESCAPED;
+            break;
+        default:
+            rb_raise(rb_eArgError, "grammar_code must be 0, 1, or 2");
     }
 
     int len = (int) RSTRING_LEN(str);  /* cast to prevent warning in 64-bit OS */
@@ -138,7 +153,7 @@ static VALUE parse_line(VALUE self, VALUE str,
             else if (state == IN_QUOTED) {
                 value[index++] = c;
             }
-            else if (state == QUOTE_IN_QUOTED) {
+            else if (state == QUOTE_IN_QUOTED || state == COMPLETED_C_ESCAPED_QUOTE) {
                 /* start new field */
                 field = rb_str_new(value, index);
                 rb_enc_associate_index(field, default_encoding);
@@ -146,6 +161,17 @@ static VALUE parse_line(VALUE self, VALUE str,
                 index = 0;
                 state = UNQUOTED;
             }
+        }
+
+        /* if we're in COMPLETED_C_ESCAPED_QUOTE and the next character isn't
+         * the separator or the end of line, there is a problem */
+        else if (state == COMPLETED_C_ESCAPED_QUOTE) {
+            rb_raise(rb_eRuntimeError, "CSV syntax error (C-like escaped grammar), unescaped quote does not terminate field: %s", ptr);
+        }
+
+        /* if encounter a possible C escaped sequence, in C_ESCAPED mode */
+        else if (mode == C_ESCAPED && c == C_ESCAPE_CHAR && state == IN_QUOTED) {
+            state = IN_QUOTED_ESCAPING;
         }
 
         /* if encounter a quote */
@@ -158,29 +184,43 @@ static VALUE parse_line(VALUE self, VALUE str,
                 /* incorrectly placed quote in unquoted field, but in relaxed mode */
                 value[index++] = c;
             }
-            else if (state == IN_QUOTED) {
-                /* start of possible quote termination or escape */
-                state = QUOTE_IN_QUOTED;
+            else if (state == IN_QUOTED_ESCAPING) {
+                /* escaped quote */
+                value[index++] = c;
+                state = IN_QUOTED;
             }
             else if (state == QUOTE_IN_QUOTED) {
                 /* quote escape completed */
                 value[index++] = c;
                 state = IN_QUOTED;
             }
+            else if (state == IN_QUOTED && mode == C_ESCAPED) {
+                /* in C_ESCAPED, a quote while IN_QUOTED is supposed to always
+                 * denote the end of the quoted string */
+                state = COMPLETED_C_ESCAPED_QUOTE;
+            }
+            else if (state == IN_QUOTED) {
+                /* start of possible quote termination or escape */
+                state = QUOTE_IN_QUOTED;
+            }
             else {
-                rb_raise(rb_eRuntimeError, "CSV syntax error (strict grammar): %s", ptr);
+                rb_raise(rb_eRuntimeError, "CSV syntax error (strict or C-like escaped grammar), stray quote character: %s", ptr);
             }
         }
 
         /* if encounter a single-char line break (CR or LF) */
         else if ((c == 13 && linebreakc[0] == 13) || (!crlf && c == 10 && linebreakc[0] == 10)) {
+            if (state == IN_QUOTED_ESCAPING) {
+                value[index++] = c;
+                state = IN_QUOTED;
+            }
             if (state == IN_QUOTED) {
                 value[index++] = c;
             }
             else {
                 /* only parse up to the first linebreak, rest is silently ignored
                  * maybe make this an exception in the future? */
-                i = len;
+                break;
             }
         }
 
@@ -194,7 +234,7 @@ static VALUE parse_line(VALUE self, VALUE str,
             else {
                 /* only parse up to the first linebreak, rest is silently ignored
                  * maybe make this an exception in the future? */
-                i = len;
+                break;
             }
         }
 
@@ -208,10 +248,36 @@ static VALUE parse_line(VALUE self, VALUE str,
                 state = IN_QUOTED;
             }
             else {
-                rb_raise(rb_eRuntimeError, "CSV syntax error (strict grammar): %s", ptr);
+                rb_raise(rb_eRuntimeError, "CSV syntax error (strict or C-like escaped grammar), improperly escaped quote: %s", ptr);
             }
         }
 
+        /* regular escape sequences */
+        else if (state == IN_QUOTED_ESCAPING) {
+            switch(c) {
+                case 'n':
+                    value[index++] = '\n';
+                    break;
+                case 'r':
+                    value[index++] = '\r';
+                    break;
+                case 't':
+                    value[index++] = '\t';
+                    break;
+                case '\'':
+                case '"':
+                case '?':
+                case '\\':
+                    value[index++] = c;
+                    break;
+                default:
+                    value[index++] = C_ESCAPE_CHAR;
+                    value[index++] = c;
+            }
+            state = IN_QUOTED;
+        }
+
+        /* regular characters */
         else {
             value[index++] = c;
         }
@@ -220,7 +286,10 @@ static VALUE parse_line(VALUE self, VALUE str,
 
     /* last field in the input */
 
-    if (state == UNQUOTED) {
+    if (state == IN_QUOTED_ESCAPING) {
+        rb_raise(rb_eRuntimeError, "CSV syntax error (strict or C-like escaped grammar), cannot end line on an incomplete escape: %s", ptr);
+    }
+    else if (state == UNQUOTED) {
         if (index == 0) {
             rb_ary_push(array, Qnil);
         }
@@ -240,8 +309,12 @@ static VALUE parse_line(VALUE self, VALUE str,
     rb_ary_push(output, array);
 
     /* we have an incomplete row if we're IN_QUOTED */
-    if (state == IN_QUOTED) rb_ary_push(output, Qfalse);
-    else rb_ary_push(output, Qtrue);
+    if (state == IN_QUOTED) {
+        rb_ary_push(output, Qfalse);
+    }
+    else {
+        rb_ary_push(output, Qtrue);
+    }
 
     return output;
 }

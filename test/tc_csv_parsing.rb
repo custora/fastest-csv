@@ -196,4 +196,33 @@ class TestCSVParsing < Minitest::Test
     assert_equal(rows_with_header[1..-1], rows_without_header)
   end
 
+  def test_c_escaped
+    case_basic = [
+      %(Ten Thousand,10000, 2710 ,,"10,000","It's \\"10 Grand\\", baby",10K\n),
+      [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", baby", "10K" ],
+    ]
+    assert_equal(case_basic.last,
+                 FastestCSV.parse_line(case_basic.first, grammar: 'c_escaped'))
+    assert_equal(case_basic.last,
+                 FastestCSV.parse_line(case_basic.first, grammar: 'c_escaped', quote_char: '"'))
+
+    [
+      [%(a,b),               ['a', 'b']],
+      [%(a,,,),              ["a", nil, nil, nil]],
+      [%(,),                 [nil, nil]],
+      [%("",""),             ["", ""]],
+      ['a,"b\n","c\r","d\n\r"',     ['a', "b\n", "c\r", "d\n\r"]],
+      ['"a\?","b\"","c\'","d\\\\"', ['a?', 'b"', "c'", "d\\"]],
+      ['"a\a",aa,bb,"b\b"',         ['a\a', 'aa', 'bb', 'b\b']],
+    ].each do |csv_test|
+      assert_equal(csv_test.last,
+                   FastestCSV.parse_line(csv_test.first, grammar: 'c_escaped'))
+    end
+
+    assert_raises RuntimeError do
+      assert_equal(case_basic.last,
+                   FastestCSV.parse_line(case_basic.first, grammar: 'c_escaped', quote_char: '$'))
+    end
+  end
+
 end

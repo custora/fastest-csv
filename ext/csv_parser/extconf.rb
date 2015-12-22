@@ -2,14 +2,11 @@
 
 require 'mkmf'
 extension_name = 'csv_parser'
-# dir_config(extension_name)
 
-if RUBY_VERSION =~ /1.8/
+# rubocop:disable Style/GlobalVars
+if RUBY_VERSION =~ /^1.8/
   $CPPFLAGS += " -DRUBY_18"
 end
-
-# if CONFIG["arch"] =~ /mswin32|mingw/
-#  $CFLAGS += " -march=i686"
-# end
+# rubocop:enable Style/GlobalVars
 
 create_makefile(extension_name)

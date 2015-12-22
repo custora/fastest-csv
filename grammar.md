@@ -68,3 +68,8 @@ The default option in this package is actually 'relaxed' grammar, which will att
   - if FIELDQUOTE is encountered in the middle of an escaped TEXTDATA but is not followed by another FIELDQUOTE, it will be interpreted as a regular character
 
 These departures from the fairly clean CSV grammar defined above are to help deal with common malformations in CSV that are still accepted by MySQL's `LOAD DATA INFILE`.
+
+
+## C-escaped
+
+There is a grammar option 'c_escaped' that will interpret all data in an escaped field above using a limited subset of C-like escape sequences. This was added because it is somewhat common for CSV files to use this style of escaping i.e. \" to represent a quotation mark, not "". If this grammar is used, FIELDQUOTE must be the double quote character, and the treatment of quotation marks will be strict - they must start and end a field.

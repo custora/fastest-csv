@@ -31,7 +31,7 @@ class FastestCSV
     if (fieldsep == fieldquote)
       fail "separator and quote characters cannot be the same"
     end
-    if !(["strict", "relaxed", "c_escaped"].include? grammar)
+    if !(['strict', 'relaxed', 'c_escaped'].include? grammar)
       fail "grammar must be 'strict', 'relaxed', or 'c_escaped'"
     end
     if grammar == "c_escaped" && fieldquote != DEFAULT_FIELDQUOTE
@@ -102,7 +102,7 @@ class FastestCSV
       col_sep:    DEFAULT_FIELDSEP,
       row_sep:    DEFAULT_LINEBREAK,
       quote_char: DEFAULT_FIELDQUOTE,
-      grammar:    "relaxed",
+      grammar:    'relaxed',
     }.merge(_opts)
     assert_valid_grammar(_opts[:col_sep], _opts[:quote_char], _opts[:row_sep], _opts[:grammar])
     _opts[:grammar] =
@@ -133,7 +133,7 @@ class FastestCSV
       col_sep:      DEFAULT_FIELDSEP,
       row_sep:      DEFAULT_LINEBREAK,
       quote_char:   DEFAULT_FIELDQUOTE,
-      grammar:      "relaxed",
+      grammar:      'relaxed',
       force_quotes: false,
     }.merge(_opts)
     assert_valid_grammar(_opts[:col_sep], _opts[:quote_char], _opts[:row_sep], _opts[:grammar])
@@ -155,7 +155,7 @@ class FastestCSV
       col_sep:      DEFAULT_FIELDSEP,
       row_sep:      DEFAULT_LINEBREAK,
       quote_char:   DEFAULT_FIELDQUOTE,
-      grammar:      "relaxed",
+      grammar:      'relaxed',
       force_quotes: false,
       force_utf8:   false,
       write_buffer_lines: DEFAULT_WRITE_BUFFER_LINES,

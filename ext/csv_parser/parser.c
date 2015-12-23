@@ -23,7 +23,7 @@
 /* http://tenderlovemaking.com/2009/06/26/string-encoding-in-ruby-1-9-c-extensions.html */
 #define DEFAULT_STRING_ENCODING "UTF-8"
 
-typedef enum modes {STRICT, RELAXED, C_ESCAPED} grammar_mode_t;
+typedef enum modes {STRICT, RELAXED, C_ESCAPED, C_ESCAPED_RELAXED} grammar_mode_t;
 
 static VALUE mCsvParser;
 
@@ -90,8 +90,11 @@ static VALUE parse_line(VALUE self, VALUE str,
         case 2:
             mode = C_ESCAPED;
             break;
+        case 3:
+            mode = C_ESCAPED_RELAXED;
+            break;
         default:
-            rb_raise(rb_eArgError, "grammar_code must be 0, 1, or 2");
+            rb_raise(rb_eArgError, "grammar_code must be 0, 1, 2, or 3");
     }
 
     int len = (int) RSTRING_LEN(str);  /* cast to prevent warning in 64-bit OS */
@@ -166,11 +169,12 @@ static VALUE parse_line(VALUE self, VALUE str,
         /* if we're in COMPLETED_C_ESCAPED_QUOTE and the next character isn't
          * the separator or the end of line, there is a problem */
         else if (state == COMPLETED_C_ESCAPED_QUOTE) {
-            rb_raise(rb_eRuntimeError, "CSV syntax error (C-like escaped grammar), unescaped quote does not terminate field: %s", ptr);
+            rb_raise(rb_eRuntimeError, "CSV syntax error, unescaped quote does not terminate field: %s", ptr);
         }
 
         /* if encounter a possible C escaped sequence, in C_ESCAPED mode */
-        else if (mode == C_ESCAPED && c == C_ESCAPE_CHAR && state == IN_QUOTED) {
+        else if ((mode == C_ESCAPED || mode == C_ESCAPED_RELAXED) &&
+                 c == C_ESCAPE_CHAR && state == IN_QUOTED) {
             state = IN_QUOTED_ESCAPING;
         }
 
@@ -180,7 +184,7 @@ static VALUE parse_line(VALUE self, VALUE str,
                 /* opening quote */
                 state = IN_QUOTED;
             }
-            else if (state == UNQUOTED && mode == RELAXED) {
+            else if (state == UNQUOTED && (mode == RELAXED || mode == C_ESCAPED_RELAXED)) {
                 /* incorrectly placed quote in unquoted field, but in relaxed mode */
                 value[index++] = c;
             }
@@ -188,6 +192,12 @@ static VALUE parse_line(VALUE self, VALUE str,
                 /* escaped quote */
                 value[index++] = c;
                 state = IN_QUOTED;
+            }
+            else if (state == QUOTE_IN_QUOTED && mode == C_ESCAPED_RELAXED) {
+                /* in relaxed C-escaped, we allow quote characters to appear in
+                 * the middle of quoted fields - we read them as regular
+                 * characters */
+                value[index++] = quotec[0];
             }
             else if (state == QUOTE_IN_QUOTED) {
                 /* quote escape completed */
@@ -204,7 +214,7 @@ static VALUE parse_line(VALUE self, VALUE str,
                 state = QUOTE_IN_QUOTED;
             }
             else {
-                rb_raise(rb_eRuntimeError, "CSV syntax error (strict or C-like escaped grammar), stray quote character: %s", ptr);
+                rb_raise(rb_eRuntimeError, "CSV syntax error, stray quote character: %s", ptr);
             }
         }
 
@@ -242,13 +252,13 @@ static VALUE parse_line(VALUE self, VALUE str,
          * separator, or line break (which is a syntax error, but we'll let
          * slide if we're being relaxed) */
         else if (state == QUOTE_IN_QUOTED) {
-            if (mode == RELAXED) {
+            if (mode == RELAXED || mode == C_ESCAPED_RELAXED) {
                 if (!nil_quote_char) value[index++] = quotec[0];
                 value[index++] = c;
                 state = IN_QUOTED;
             }
             else {
-                rb_raise(rb_eRuntimeError, "CSV syntax error (strict or C-like escaped grammar), improperly escaped quote: %s", ptr);
+                rb_raise(rb_eRuntimeError, "CSV syntax error, improperly escaped quote: %s", ptr);
             }
         }
 
@@ -285,9 +295,8 @@ static VALUE parse_line(VALUE self, VALUE str,
     }
 
     /* last field in the input */
-
     if (state == IN_QUOTED_ESCAPING) {
-        rb_raise(rb_eRuntimeError, "CSV syntax error (strict or C-like escaped grammar), cannot end line on an incomplete escape: %s", ptr);
+        rb_raise(rb_eRuntimeError, "CSV syntax error, cannot end line on an incomplete escape: %s", ptr);
     }
     else if (state == UNQUOTED) {
         if (index == 0) {

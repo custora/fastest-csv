@@ -72,4 +72,6 @@ These departures from the fairly clean CSV grammar defined above are to help dea
 
 ## C-escaped
 
-There is a grammar option 'c_escaped' that will interpret all data in an escaped field above using a limited subset of C-like escape sequences. This was added because it is somewhat common for CSV files to use this style of escaping i.e. \" to represent a quotation mark, not "". If this grammar is used, FIELDQUOTE must be the double quote character, and the treatment of quotation marks will be strict - they must start and end a field.
+There are grammar options 'c_escaped' and 'c_escaped_relaxed' that will interpret all data in an escaped field above using a limited subset of C-like escape sequences. This was added because it is somewhat common for CSV files to use this style of escaping i.e. \" to represent a quotation mark, not "". If either of these grammars is used, FIELDQUOTE must be the double quote character.
+
+Under 'c_escaped', the treatment of quotation marks will be as in 'strict' - they cannot appear in the middle of an unquoted field, and there can be no characters before the start and end of the quotation marks. Under 'c_escaped_relaxed', the parser tries to let things slide and will interpret stray quote characters as the actual characters. 'c_escaped_relaxed' will _not_ convert repeated quote characters into single characters.

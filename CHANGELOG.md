@@ -1,3 +1,6 @@
+# 0.8.1
+- Added `c_escaped_relaxed` grammar option
+
 # 0.8
 - Added `c_escaped` grammar option to handle C-style escape sequences
 - Renamed the gem 'fastest_csv', in accordance with [Rubygems guidelines](http://guides.rubygems.org/name-your-gem/)

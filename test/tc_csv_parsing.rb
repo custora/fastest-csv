@@ -220,8 +220,63 @@ class TestCSVParsing < Minitest::Test
     end
 
     assert_raises RuntimeError do
-      assert_equal(case_basic.last,
-                   FastestCSV.parse_line(case_basic.first, grammar: 'c_escaped', quote_char: '$'))
+      FastestCSV.parse_line(case_basic.first, grammar: 'c_escaped', quote_char: '$')
+    end
+
+    # dangling escape
+    assert_raises RuntimeError do
+      FastestCSV.parse_line('a,"b\\', grammar: 'c_escaped')
+    end
+  end
+
+  def test_c_escaped_relaxed
+    case_basic = [
+      %(Ten Thousand,10000, 2710 ,,"10,000","It's \\"10 Grand\\", baby",10K\n),
+      [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", baby", "10K" ],
+    ]
+    assert_equal(case_basic.last,
+                 FastestCSV.parse_line(case_basic.first, grammar: 'c_escaped_relaxed'))
+    assert_equal(case_basic.last,
+                 FastestCSV.parse_line(case_basic.first, grammar: 'c_escaped_relaxed', quote_char: '"'))
+
+    [
+      [%(a,b),               ['a', 'b']],
+      [%(a,,,),              ["a", nil, nil, nil]],
+      [%(,),                 [nil, nil]],
+      [%("",""),             ["", ""]],
+      ['a,"b\n","c\r","d\n\r"',     ['a', "b\n", "c\r", "d\n\r"]],
+      ['"a\?","b\"","c\'","d\\\\"', ['a?', 'b"', "c'", "d\\"]],
+      ['"a\a",aa,bb,"b\b"',         ['a\a', 'aa', 'bb', 'b\b']],
+    ].each do |csv_test|
+      assert_equal(csv_test.last,
+                   FastestCSV.parse_line(csv_test.first, grammar: 'c_escaped_relaxed'))
+    end
+
+    assert_raises RuntimeError do
+      FastestCSV.parse_line(case_basic.first, grammar: 'c_escaped_relaxed', quote_char: '$')
+    end
+
+    [
+      [%(",a),      [',a']],
+      [%(a,"),      ['a', '']],
+      [%(a,"b"c),   ['a', 'b"c']],
+      [%(a,b"c"),   ['a', 'b"c"']],
+      [%(a,b""c"),  ['a', 'b""c"']],
+      [%(a,"b"c"),  ['a', 'b"c']],
+      [%(a,"b""c"), ['a', 'b""c']], # don't escape
+      [%(a,"b\\c),  ['a', 'b\\c']],
+    ].each do |csv_test|
+      assert_raises RuntimeError do
+        FastestCSV.parse_line(csv_test.first, grammar: 'c_escaped')
+      end
+      assert_equal(csv_test.last,
+                   FastestCSV.parse_line(csv_test.first, grammar: 'c_escaped_relaxed'))
+    end
+
+    # this still fails, we don't permit a quoted line to end in a dangling
+    # escape even under relaxed
+    assert_raises RuntimeError do
+      FastestCSV.parse_line('a,"b\\', grammar: 'c_escaped_relaxed')
     end
   end
 

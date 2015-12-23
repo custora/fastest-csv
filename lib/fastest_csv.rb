@@ -31,10 +31,10 @@ class FastestCSV
     if (fieldsep == fieldquote)
       fail "separator and quote characters cannot be the same"
     end
-    if !(['strict', 'relaxed', 'c_escaped'].include? grammar)
+    if !(['strict', 'relaxed', 'c_escaped', 'c_escaped_relaxed'].include? grammar)
       fail "grammar must be 'strict', 'relaxed', or 'c_escaped'"
     end
-    if grammar == "c_escaped" && fieldquote != DEFAULT_FIELDQUOTE
+    if ['c_escaped', 'c_escaped_relaxed'].include?(grammar) && fieldquote != DEFAULT_FIELDQUOTE
       fail "C-escaped grammar must use default field quote #{DEFAULT_FIELDQUOTE}"
     end
     true
@@ -113,8 +113,10 @@ class FastestCSV
         1
       when 'c_escaped'
         2
+      when 'c_escaped_relaxed'
+        3
       else
-        fail "grammar must be 'strict', 'relaxed', or 'c_escaped'"
+        fail "grammar must be 'strict', 'relaxed', 'c_escaped', or 'c_escaped_relaxed'"
       end
     output = CsvParser.parse_line(
       line,
@@ -124,7 +126,9 @@ class FastestCSV
       _opts[:grammar],
       0,
     )
-    fail "Incomplete CSV line under strict grammar: #{line}" if _opts[:grammar] == 0 && !output[1]
+    if [0, 2].include?(_opts[:grammar]) && !output[1]
+      fail "Incomplete CSV line under strict grammar: #{line}"
+    end
     output[0]
   end
 
@@ -173,8 +177,10 @@ class FastestCSV
         1
       when 'c_escaped'
         2
+      when 'c_escaped_relaxed'
+        3
       else
-        fail "grammar must be 'strict', 'relaxed', or 'c_escaped'"
+        fail "grammar must be 'strict', 'relaxed', 'c_escaped', or 'c_escaped_relaxed'"
       end
 
     @opts = _opts

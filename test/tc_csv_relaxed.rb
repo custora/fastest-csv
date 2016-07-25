@@ -34,8 +34,7 @@ class TestCSVRelaxed < Minitest::Test
       [%(a,b","c"),   ['a', 'b"', 'c']],
       [%(a,b",",c"),  ['a', 'b"', ',c']],
       [%(a,"b,",c"),  ['a', 'b,', 'c"']],
-      [%(a,b",c"),    ['a', 'b"', 'c"']],
-    ].each do |csv_test|
+      [%(a,b",c"),    ['a', 'b"', 'c"']]].each do |csv_test|
       assert_equal(csv_test.last,
                    FastestCSV.parse_line(csv_test.first)) # default: relaxed grammar
       assert_raises RuntimeError do

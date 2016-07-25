@@ -96,8 +96,7 @@ class TestCSVParsing < Minitest::Test
       ["foo,\"\r\n\n\",baz",      ["foo", "\r\n\n", "baz"]],
       ["foo,\"foo,bar\",baz",     ["foo", "foo,bar", "baz"]],
       [";,;",                     [";", ";"]],
-      ["foo,\"foo,bar,baz,foo\",\"foo\"", ["foo", "foo,bar,baz,foo", "foo"]],
-    ].each do |csv_test|
+      ["foo,\"foo,bar,baz,foo\",\"foo\"", ["foo", "foo,bar,baz,foo", "foo"]]].each do |csv_test|
       assert_equal(csv_test.last,
                    FastestCSV.parse_line(csv_test.first))
       assert_equal(csv_test.last,
@@ -142,8 +141,7 @@ class TestCSVParsing < Minitest::Test
       [%(wiggle,"""waggle""this""""","""""""another''thing"""), ["wiggle", "\"waggle\"this\"\"", "\"\"\"another''thing\""]],
       [%(wiggle,"""waggle""this"""""",""""""another''thing"""), ["wiggle", "\"waggle\"this\"\"\",\"\"\"another''thing\""]],
       [%(wiggle,"""waggle""this""""""","""""another''thing"""), ["wiggle", "\"waggle\"this\"\"\"", "\"\"another''thing\""]],
-      [%(wiggle,"""""""waggle""""""""this"""""""""""""""),      ["wiggle", "\"\"\"waggle\"\"\"\"this\"\"\"\"\"\"\""]],
-    ].each do |csv_test|
+      [%(wiggle,"""""""waggle""""""""this"""""""""""""""),      ["wiggle", "\"\"\"waggle\"\"\"\"this\"\"\"\"\"\"\""]]].each do |csv_test|
       assert_equal(csv_test.last,
                    FastestCSV.parse_line(csv_test.first))
       assert_equal(csv_test.last,
@@ -156,8 +154,7 @@ class TestCSVParsing < Minitest::Test
     # next version. Just trying to match old to_csv functionality for now, which
     # does accept and process it.
     [ [ %(\x00,a), ["\x00", "a"] ],
-      [ %(a,\x00,b,,c), ["a", "\x00", "b", nil, "c"] ],
-    ].each do |csv_test|
+      [ %(a,\x00,b,,c), ["a", "\x00", "b", nil, "c"] ]].each do |csv_test|
       assert_equal(csv_test.last,
                    FastestCSV.parse_line(csv_test.first))
       assert_equal(csv_test.last,
@@ -170,8 +167,7 @@ class TestCSVParsing < Minitest::Test
       [%(a,"b"),    ['a', '"b"'],        ['a', 'b']],
       [%("a,b"),    ['"a', 'b"'],        ['a,b']],
       [%("a,",b"),  ['"a', '"', 'b"'],   ['a,', 'b"']], # this will only work with a quote char if grammar is relaxed
-      [%("a,"",b"), ['"a', '""', 'b"'],  ['a,",b']],
-    ].each do |csv_test|
+      [%("a,"",b"), ['"a', '""', 'b"'],  ['a,",b']]].each do |csv_test|
       assert_equal(csv_test[1],
                    FastestCSV.parse_line(csv_test.first, quote_char: nil))
       assert_equal(csv_test[2],

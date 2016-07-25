@@ -82,8 +82,7 @@ class TestCSVGenerating < Minitest::Test
       ["foo,\"\r\n\n\",baz",      ["foo", "\r\n\n", "baz"]],
       ["foo,\"foo,bar\",baz",     ["foo", "foo,bar", "baz"]],
       [";,;",                     [";", ";"]],
-      ["foo,\"foo,bar,baz,foo\",foo", ["foo", "foo,bar,baz,foo", "foo"]],
-    ].each do |csv_test|
+      ["foo,\"foo,bar,baz,foo\",foo", ["foo", "foo,bar,baz,foo", "foo"]]].each do |csv_test|
       assert_equal(csv_test.first + "\n",
                    FastestCSV.generate_line(csv_test.last))
     end
@@ -92,8 +91,7 @@ class TestCSVGenerating < Minitest::Test
 
     [ ["\"\"",                    [""]],
       ["\"foo\",\"\",\"baz\"",    ["foo", "", "baz"]],
-      ["\"foo\",\"foo,bar,baz,foo\",\"foo\"", ["foo", "foo,bar,baz,foo", "foo"]],
-    ].each do |csv_test|
+      ["\"foo\",\"foo,bar,baz,foo\",\"foo\"", ["foo", "foo,bar,baz,foo", "foo"]]].each do |csv_test|
       assert_equal(csv_test.first + "\n",
                    FastestCSV.generate_line(csv_test.last, force_quotes: true))
     end
@@ -135,8 +133,7 @@ class TestCSVGenerating < Minitest::Test
       [%(wiggle,"""waggle""this""""","""""""another''thing"""), ["wiggle", "\"waggle\"this\"\"", "\"\"\"another''thing\""]],
       [%(wiggle,"""waggle""this"""""",""""""another''thing"""), ["wiggle", "\"waggle\"this\"\"\",\"\"\"another''thing\""]],
       [%(wiggle,"""waggle""this""""""","""""another''thing"""), ["wiggle", "\"waggle\"this\"\"\"", "\"\"another''thing\""]],
-      [%(wiggle,"""""""waggle""""""""this"""""""""""""""),      ["wiggle", "\"\"\"waggle\"\"\"\"this\"\"\"\"\"\"\""]],
-    ].each do |csv_test|
+      [%(wiggle,"""""""waggle""""""""this"""""""""""""""),      ["wiggle", "\"\"\"waggle\"\"\"\"this\"\"\"\"\"\"\""]]].each do |csv_test|
       assert_equal(csv_test.first + "\n",
                    FastestCSV.generate_line(csv_test.last))
     end
@@ -150,8 +147,7 @@ class TestCSVGenerating < Minitest::Test
       [%("a\r\na","one CRLF"),            ["a\r\na", 'one CRLF']],
       [%("a\r\n\r\na","two CRLFs"),       ["a\r\n\r\na", 'two CRLFs']],
       [%("with blank","start\n\nfinish"), ['with blank', "start\n\nfinish"]],
-      [%("with blank","start\n\nfinish",""), ['with blank', "start\n\nfinish", ""]],
-    ].each do |csv_test|
+      [%("with blank","start\n\nfinish",""), ['with blank', "start\n\nfinish", ""]]].each do |csv_test|
       assert_equal(csv_test.first + "\n",
                    FastestCSV.generate_line(csv_test.last, force_quotes: true))
     end
@@ -162,8 +158,7 @@ class TestCSVGenerating < Minitest::Test
     # next version. Just trying to match old to_csv functionality for now, which
     # does accept and process it.
     [ [ %(\x00,a), ["\x00", "a"] ],
-      [ %(a,\x00,b,,c), ["a", "\x00", "b", nil, "c"] ],
-    ].each do |csv_test|
+      [ %(a,\x00,b,,c), ["a", "\x00", "b", nil, "c"] ]].each do |csv_test|
       assert_equal(csv_test.first + "\n", FastestCSV.generate_line(csv_test.last))
     end
   end

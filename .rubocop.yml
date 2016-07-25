@@ -30,13 +30,47 @@ Metrics/CyclomaticComplexity:
 Metrics/PerceivedComplexity:
   Max: 600
 
+# See: https://github.com/bbatsov/rubocop/issues/2614
+Performance/Casecmp:
+  Enabled: false
+
+Performance/RedundantBlockCall:
+  Enabled: false
+
+Performance/RedundantMerge:
+  Enabled: false
+
+Performance/TimesMap:
+  Enabled: false
+
+Style/Alias:
+  Enabled: false
+
+Style/CaseEquality:
+  Enabled: false
+
+Style/CaseIndentation:
+  Enabled: false
+
 Style/ClassAndModuleChildren:
+  Enabled: false
+
+Style/ConditionalAssignment:
   Enabled: false
 
 Style/GuardClause:
   Enabled: false
 
+Style/IndentArray:
+  EnforcedStyle: consistent
+
+Style/IndentArray:
+  EnforcedStyle: consistent
+
 Style/IfUnlessModifier:
+  Enabled: false
+
+Style/MutableConstant:
   Enabled: false
 
 Style/NegatedIf:
@@ -57,8 +91,11 @@ Style/StringLiterals:
 Style/SpaceInsideBrackets:
   Enabled: false
 
-Style/TrailingComma:
-  EnforcedStyleForMultiline: comma
+Style/TrivialAccessors:
+  AllowPredicates: true
+
+Style/UnneededInterpolation:
+  Enabled: false
 
 Style/WordArray:
   MinSize: 5
@@ -69,11 +106,23 @@ Style/EmptyLinesAroundClassBody:
 Style/MultilineOperationIndentation:
   EnforcedStyle: indented
 
+Style/MultilineMethodCallIndentation:
+  EnforcedStyle: indented
+
+Style/Next:
+  Enabled: false
+
 Style/PerlBackrefs:
   Enabled: false
 
-Style/TrailingComma:
+Style/TrailingCommaInLiteral:
   EnforcedStyleForMultiline: comma
+
+Style/TrailingCommaInArguments:
+  EnforcedStyleForMultiline: comma
+
+Style/ZeroLengthPredicate:
+  Enabled: false
 
 Lint/EndAlignment:
   AlignWith: variable

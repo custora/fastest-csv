@@ -20,22 +20,22 @@ class FastestCSV
 
   def self.assert_valid_grammar(fieldsep, fieldquote, linebreak, grammar)
     if !((fieldsep.is_a? String) && fieldsep.length == 1)
-      fail "separator character must be a string of length 1"
+      raise "separator character must be a string of length 1"
     end
     if !(fieldquote.nil? || ((fieldquote.is_a? String) && fieldquote.length == 1))
-      fail "quote character must be a string of length 1 (or nil, but only if we are parsing-only)"
+      raise "quote character must be a string of length 1 (or nil, but only if we are parsing-only)"
     end
     if !(["\r", "\n", "\r\n"].include? linebreak)
-      fail "linebreak must be CR, LF, or CR LF"
+      raise "linebreak must be CR, LF, or CR LF"
     end
-    if (fieldsep == fieldquote)
-      fail "separator and quote characters cannot be the same"
+    if fieldsep == fieldquote
+      raise "separator and quote characters cannot be the same"
     end
     if !(['strict', 'relaxed', 'c_escaped', 'c_escaped_relaxed'].include? grammar)
-      fail "grammar must be 'strict', 'relaxed', or 'c_escaped'"
+      raise "grammar must be 'strict', 'relaxed', or 'c_escaped'"
     end
     if ['c_escaped', 'c_escaped_relaxed'].include?(grammar) && fieldquote != DEFAULT_FIELDQUOTE
-      fail "C-escaped grammar must use default field quote #{DEFAULT_FIELDQUOTE}"
+      raise "C-escaped grammar must use default field quote #{DEFAULT_FIELDQUOTE}"
     end
     true
   end
@@ -116,7 +116,7 @@ class FastestCSV
       when 'c_escaped_relaxed'
         3
       else
-        fail "grammar must be 'strict', 'relaxed', 'c_escaped', or 'c_escaped_relaxed'"
+        raise "grammar must be 'strict', 'relaxed', 'c_escaped', or 'c_escaped_relaxed'"
       end
     output = CsvParser.parse_line(
       line,
@@ -127,7 +127,7 @@ class FastestCSV
       0,
     )
     if [0, 2].include?(_opts[:grammar]) && !output[1]
-      fail "Incomplete CSV line under strict grammar: #{line}"
+      raise "Incomplete CSV line under strict grammar: #{line}"
     end
     output[0]
   end
@@ -180,7 +180,7 @@ class FastestCSV
       when 'c_escaped_relaxed'
         3
       else
-        fail "grammar must be 'strict', 'relaxed', 'c_escaped', or 'c_escaped_relaxed'"
+        raise "grammar must be 'strict', 'relaxed', 'c_escaped', or 'c_escaped_relaxed'"
       end
 
     @opts = _opts
@@ -247,7 +247,7 @@ class FastestCSV
       if check_field_count && @field_count.nil?
         @field_count = parsed_line.length
       elsif check_field_count && @field_count != parsed_line.length
-        fail "Default field count is #{@field_count}, but the following line parsed into #{parsed_line.length} entries: \n#{line}"
+        raise "Default field count is #{@field_count}, but the following line parsed into #{parsed_line.length} entries: \n#{line}"
       end
       parsed_line
     end
@@ -281,13 +281,13 @@ class FastestCSV
     until line.valid_encoding?
       # try encodings in sequence until one works, or raise exception if none work
       if encoding_i >= non_utf8_encodings.length
-        fail "Unable to encode following non-UTF-8 string to UTF-8 using any of #{non_utf8_encodings}:\n#{line}"
+        raise "Unable to encode following non-UTF-8 string to UTF-8 using any of #{non_utf8_encodings}:\n#{line}"
       end
       line = line.force_encoding(non_utf8_encodings[encoding_i]).encode("UTF-8")
       encoding_i += 1
     end
     @current_write_buffer << line
-    if (@current_buffer_count == write_buffer_lines)
+    if @current_buffer_count == write_buffer_lines
       flush(false)
     end
   end

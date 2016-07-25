@@ -41,14 +41,14 @@ class FastestCSV
   end
 
   # Pass each line of the specified +path+ as array to the provided +block+
-  def self.foreach(path, _opts = {}, &block)
-    open(path, "r:bom|utf-8", _opts) do |reader|
+  def self.foreach(path, opts = {}, &block)
+    open(path, "r:bom|utf-8", opts) do |reader|
       reader.each(&block)
     end
   end
 
-  def self.foreach_raw_line(path, _opts = {}, &block)
-    open(path, "r:bom|utf-8", _opts) do |reader|
+  def self.foreach_raw_line(path, opts = {}, &block)
+    open(path, "r:bom|utf-8", opts) do |reader|
       reader.each_raw_line(&block)
     end
   end
@@ -60,8 +60,8 @@ class FastestCSV
   # later version.
 
   # rb:bom will ignore the first character if it's an invisible Byte order mark
-  def self.open(path, mode = "rb:bom|utf-8", _opts = {})
-    csv = new(File.open(path, mode), _opts)
+  def self.open(path, mode = "rb:bom|utf-8", opts = {})
+    csv = new(File.open(path, mode), opts)
     if block_given?
       begin
         yield csv
@@ -74,18 +74,18 @@ class FastestCSV
   end
 
   # Read all lines from the specified +path+ into an array of arrays
-  def self.read(path, _opts = {})
-    open(path, "r:bom|utf-8", _opts, &:read)
+  def self.read(path, opts = {})
+    open(path, "r:bom|utf-8", opts, &:read)
   end
 
   # Alias for FastestCSV.read
-  def self.readlines(path, _opts = {})
-    read(path, _opts)
+  def self.readlines(path, opts = {})
+    read(path, opts)
   end
 
   # Read all lines from the specified String into an array of arrays
-  def self.parse(data, _opts = {}, &block)
-    csv = new(StringIO.new(data), _opts)
+  def self.parse(data, opts = {}, &block)
+    csv = new(StringIO.new(data), opts)
     if block.nil?
       begin
         csv.read
@@ -97,16 +97,16 @@ class FastestCSV
     end
   end
 
-  def self.parse_line(line, _opts = {})
-    _opts = {
+  def self.parse_line(line, opts = {})
+    opts = {
       col_sep:    DEFAULT_FIELDSEP,
       row_sep:    DEFAULT_LINEBREAK,
       quote_char: DEFAULT_FIELDQUOTE,
       grammar:    'relaxed',
-    }.merge(_opts)
-    assert_valid_grammar(_opts[:col_sep], _opts[:quote_char], _opts[:row_sep], _opts[:grammar])
-    _opts[:grammar] =
-      case _opts[:grammar]
+    }.merge(opts)
+    assert_valid_grammar(opts[:col_sep], opts[:quote_char], opts[:row_sep], opts[:grammar])
+    opts[:grammar] =
+      case opts[:grammar]
       when 'strict'
         0
       when 'relaxed'
@@ -120,42 +120,42 @@ class FastestCSV
       end
     output = CsvParser.parse_line(
       line,
-      _opts[:col_sep],
-      _opts[:quote_char],
-      _opts[:row_sep],
-      _opts[:grammar],
+      opts[:col_sep],
+      opts[:quote_char],
+      opts[:row_sep],
+      opts[:grammar],
       0,
     )
-    if [0, 2].include?(_opts[:grammar]) && !output[1]
+    if [0, 2].include?(opts[:grammar]) && !output[1]
       raise "Incomplete CSV line under strict grammar: #{line}"
     end
     output[0]
   end
 
-  def self.generate_line(data, _opts = {})
-    _opts = {
+  def self.generate_line(data, opts = {})
+    opts = {
       col_sep:      DEFAULT_FIELDSEP,
       row_sep:      DEFAULT_LINEBREAK,
       quote_char:   DEFAULT_FIELDQUOTE,
       grammar:      'relaxed',
       force_quotes: false,
-    }.merge(_opts)
-    assert_valid_grammar(_opts[:col_sep], _opts[:quote_char], _opts[:row_sep], _opts[:grammar])
+    }.merge(opts)
+    assert_valid_grammar(opts[:col_sep], opts[:quote_char], opts[:row_sep], opts[:grammar])
     CsvParser.generate_line(
       data,
-      _opts[:col_sep],
-      _opts[:quote_char],
-      _opts[:row_sep],
-      _opts[:force_quotes],
+      opts[:col_sep],
+      opts[:quote_char],
+      opts[:row_sep],
+      opts[:force_quotes],
     )
   end
 
   # Create new FastestCSV wrapping the specified IO object
-  def initialize(io, _opts = {})
+  def initialize(io, opts = {})
     # for << we will try these encodings in sequence if the string
     # produced by generate_line is not valid UTF-8 (default, try ISO-8859-1)
 
-    _opts = {
+    opts = {
       col_sep:      DEFAULT_FIELDSEP,
       row_sep:      DEFAULT_LINEBREAK,
       quote_char:   DEFAULT_FIELDQUOTE,
@@ -166,11 +166,11 @@ class FastestCSV
       check_field_count:  false,
       field_count:        nil,
       non_utf8_encodings: ["ISO-8859-1"],
-    }.merge(_opts)
+    }.merge(opts)
 
-    self.class.assert_valid_grammar(_opts[:col_sep], _opts[:quote_char], _opts[:row_sep], _opts[:grammar])
-    _opts[:grammar] =
-      case _opts[:grammar]
+    self.class.assert_valid_grammar(opts[:col_sep], opts[:quote_char], opts[:row_sep], opts[:grammar])
+    opts[:grammar] =
+      case opts[:grammar]
       when 'strict'
         0
       when 'relaxed'
@@ -183,8 +183,8 @@ class FastestCSV
         raise "grammar must be 'strict', 'relaxed', 'c_escaped', or 'c_escaped_relaxed'"
       end
 
-    @opts = _opts
-    _opts.each do |k, v|
+    @opts = opts
+    opts.each do |k, v|
       instance_variable_set(:"@#{k}", v)
       self.class.send(:attr_reader, k) if !self.respond_to?(k)
     end

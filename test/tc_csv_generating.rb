@@ -20,6 +20,10 @@ class TestCSVGenerating < Minitest::Test
       %(Ten Thousand,10000, 2710 ,,'10,000','It''s "10 Grand", baby',10K\n),
       [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", baby", "10K" ],
     ]
+    case_escape = [
+      %(Ten Thousand,10000, 2710 ,,"10,000","It's \\"10 Grand\\", baby",10K\n),
+      [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", baby", "10K" ],
+    ]
     case_linebreak1 = [
       %(Ten Thousand,10000, 2710 ,,"10,000","It's ""10 Grand"", baby",10K\r\n),
       [ "Ten Thousand", "10000", " 2710 ", nil, "10,000", "It's \"10 Grand\", baby", "10K" ],
@@ -35,6 +39,8 @@ class TestCSVGenerating < Minitest::Test
                  FastestCSV.generate_line(case_sep.last, col_sep: ";"))
     assert_equal(case_quote.first,
                  FastestCSV.generate_line(case_quote.last, quote_char: "'"))
+    assert_equal(case_escape.first,
+                 FastestCSV.generate_line(case_escape.last, escape_char: "\\"))
     assert_equal(case_linebreak1.first,
                  FastestCSV.generate_line(case_linebreak1.last, row_sep: "\r\n"))
     assert_equal(case_linebreak2.first,

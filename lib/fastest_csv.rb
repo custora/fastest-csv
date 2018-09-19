@@ -140,6 +140,9 @@ class FastestCSV
       grammar:      'relaxed',
       force_quotes: false,
     }.merge(_opts)
+
+    _opts[:escape_char] = _opts[:quote_char] if _opts[:escape_char].nil?
+
     assert_valid_grammar(_opts[:col_sep], _opts[:quote_char], _opts[:row_sep], _opts[:grammar])
     CsvParser.generate_line(
       data,
@@ -147,6 +150,7 @@ class FastestCSV
       _opts[:quote_char],
       _opts[:row_sep],
       _opts[:force_quotes],
+      _opts[:escape_char],
     )
   end
 
@@ -159,6 +163,7 @@ class FastestCSV
       col_sep:      DEFAULT_FIELDSEP,
       row_sep:      DEFAULT_LINEBREAK,
       quote_char:   DEFAULT_FIELDQUOTE,
+      escape_char:  nil,
       grammar:      'relaxed',
       force_quotes: false,
       force_utf8:   false,
@@ -167,6 +172,8 @@ class FastestCSV
       field_count:        nil,
       non_utf8_encodings: ["ISO-8859-1"],
     }.merge(_opts)
+
+    _opts[:escape_char] = _opts[:quote_char] if _opts[:escape_char].nil?
 
     self.class.assert_valid_grammar(_opts[:col_sep], _opts[:quote_char], _opts[:row_sep], _opts[:grammar])
     _opts[:grammar] =
@@ -276,7 +283,7 @@ class FastestCSV
 
   def <<(_array)
     @current_buffer_count += 1
-    line = CsvParser.generate_line(_array, col_sep, quote_char, row_sep, force_quotes) # should be UTF-8
+    line = CsvParser.generate_line(_array, col_sep, quote_char, row_sep, force_quotes, escape_char) # should be UTF-8
     encoding_i = 0
     until line.valid_encoding?
       # try encodings in sequence until one works, or raise exception if none work

@@ -330,7 +330,7 @@ static VALUE parse_line(VALUE self, VALUE str,
 
 static VALUE generate_line(VALUE self, VALUE array,
                            VALUE sep_char, VALUE quote_char, VALUE linebreak_char,
-                           VALUE force_quotes) {
+                           VALUE force_quotes, VALUE escape_char) {
 
     char c;
     char *array_str_val, *converted_val;
@@ -341,6 +341,7 @@ static VALUE generate_line(VALUE self, VALUE array,
 
     const char *sepc;
     const char *quotec;
+    const char *escapec;
     const char *linebreakc;
 
     int crlf;
@@ -356,6 +357,10 @@ static VALUE generate_line(VALUE self, VALUE array,
     if (NIL_P(quote_char))
         rb_raise(rb_eArgError, "quote_char may not be nil");
     quotec = RSTRING_PTR(quote_char);
+
+    if (NIL_P(escape_char))
+        rb_raise(rb_eArgError, "escape_char may not be nil");
+    escapec = RSTRING_PTR(escape_char);
 
     linebreakc = RSTRING_PTR(linebreak_char);
     crlf = strcmp(linebreakc, "\r\n") == 0 ? 1 : 0;
@@ -409,9 +414,9 @@ static VALUE generate_line(VALUE self, VALUE array,
             if (!quoting && (c == quotec[0] || c == sepc[0] || c == 13 || c == 10)) {
                 quoting = 1;
             }
-            /* if quote_char, dupe it */
+            /* if quote_char, escape it */
             if (c == quotec[0]) {
-                converted_val[converted_i] = c;
+                converted_val[converted_i] = escapec[0];
                 converted_val[converted_i+1] = c;
                 converted_i += 2;
             }
@@ -462,5 +467,5 @@ void Init_csv_parser()
 {
     mCsvParser = rb_define_module("CsvParser");
     rb_define_module_function(mCsvParser, "parse_line", parse_line, 6);
-    rb_define_module_function(mCsvParser, "generate_line", generate_line, 5);
+    rb_define_module_function(mCsvParser, "generate_line", generate_line, 6);
 }

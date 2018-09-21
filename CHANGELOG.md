@@ -1,3 +1,6 @@
+# 0.8.2
+- Added `escape_char` write option
+
 # 0.8.1
 - Added `c_escaped_relaxed` grammar option
 
